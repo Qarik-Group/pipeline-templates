@@ -50,7 +50,7 @@ meta:
 
   bosh:
     stemcell:
-      major: 0
+      major: 1
       cpi: aws-xen-hvm
       os: ubuntu-bionic
     target:        ((bosh-lite-environment))
