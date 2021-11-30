@@ -33,6 +33,10 @@ meta:
     private_key:  ((github-private-key))
     access_token: ((github-access-token))
 
+  bosh:
+    stemcell:
+      cpi: warden-boshlite
+
   slack:
     webhook:       ((slack-webhook))
     username:      ((slack-username))
