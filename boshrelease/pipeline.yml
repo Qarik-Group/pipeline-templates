@@ -351,19 +351,19 @@ jobs:
             path: ./git/ci/scripts/shipit
             args: []
           params:
-            REPO_ROOT:    git
-            VERSION_FROM: version/number
-            RELEASE_ROOT: gh
-            GH_RELEASE_NAME: (( grab meta.release ))
-            REPO_OUT:     pushme
+            REPO_ROOT:        git
+            VERSION_FROM:     version/number
+            RELEASE_ROOT:     gh
+            GH_RELEASE_NAME:  (( grab meta.release ))
+            REPO_OUT:         pushme
             NOTIFICATION_OUT: notifications
-            BRANCH:        (( grab meta.github.branch ))
-            GITHUB_OWNER:  (( grab meta.github.owner ))
-            GIT_EMAIL:      (( grab meta.git.email ))
-            GIT_NAME:       (( grab meta.git.name ))
-            AWS_ACCESS_KEY:       (( grab meta.aws.access_key ))
-            AWS_SECRET_KEY:       (( grab meta.aws.secret_key ))
-            MANIFESTS_DIR: (( grab meta.manifest.directory ))
+            BRANCH:           (( grab meta.github.branch ))
+            GITHUB_OWNER:     (( grab meta.github.owner ))
+            GIT_EMAIL:        (( grab meta.git.email ))
+            GIT_NAME:         (( grab meta.git.name ))
+            AWS_ACCESS_KEY:   (( grab meta.aws.access_key ))
+            AWS_SECRET_KEY:   (( grab meta.aws.secret_key ))
+            MANIFESTS_DIR:    (( grab meta.manifest.directory ))
 
       - put: git
         params:
