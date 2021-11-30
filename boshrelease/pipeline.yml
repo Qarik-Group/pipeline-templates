@@ -18,6 +18,7 @@ meta:
   url:      (( param "Please specify the full url of the target Concourse CI" ))
   pipeline: (( concat meta.name "-boshrelease" ))
   manifest:
+    directory: manifests
     path:   (( concat meta.manifest.directory "/" meta.name ".yml" ))
     vars:   "--- {}"
     vars-pr: (( grab meta.manifest.vars ))
