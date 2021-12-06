@@ -12,7 +12,7 @@ meta:
 
   image:
     registry:
-      username: ((docker_registry_username))
+      username: ((docker-registry-username))
       password: ((docker-registry-password))
 
   dockerhub:
