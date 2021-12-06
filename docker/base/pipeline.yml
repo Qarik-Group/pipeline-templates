@@ -127,7 +127,7 @@ jobs:
 
       - put: latest
         params:
-          tag:           version/number
+          tag_file:      version/number
           tag_prefix:    v
           load:          edge
           tag_as_latest: true
