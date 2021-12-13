@@ -193,6 +193,7 @@ jobs:
           outputs:
             - name: gh
             - name: pushme
+            - name: dockerhub
           run:
             path: ./git/ci/scripts/release
             args: []
@@ -207,13 +208,25 @@ jobs:
 
       - load_var: version
         file: version/number
-
       - put: latest
         inputs: [ edge ]
         params:
           image:        edge/image.tar
           version:      ((.:version))
           bump_aliases: true
+      - task: update-dockerhub-readme
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: git
+            - name: dockerhub
+          run:
+            path: ./git/ci/scripts/update-dockerhub-readme
+        params:
+          DOCKERHUB_USERNAME:   (( grab meta.dockerhub.username ))
+          DOCKERHUB_PASSWORD:   (( grab meta.dockerhub.password ))
+          DOCKERHUB_REPOSITORY: (( grab meta.dockerhub.repository ))
 
       - put: version
         params:

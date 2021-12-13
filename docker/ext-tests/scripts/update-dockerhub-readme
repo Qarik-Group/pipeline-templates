@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+: ${DOCKERHUB_USERNAME:?"required"}
+: ${DOCKERHUB_PASSWORD:?"required"}
+: ${DOCKERHUB_REPOSITORY:?"required"}
+
+
+payload=$(jq --null-input \
+    --arg "username" "${DOCKERHUB_USERNAME}" \
+    --arg "password" "${DOCKERHUB_PASSWORD}" \
+    '{ "username": $username, "password": $password }')
+
+curl --silent --fail --show-error --location \
+    --request "POST" \
+    --url "https://hub.docker.com/v2/users/login" \
+    --header "Content-Type: application/json" \
+    --data-raw "${payload}" \
+  > ./token.json
+
+payload=$(jq --null-input \
+    --arg "full_description" "$(cat dockerhub/README.md)" \
+    '{ "full_description": $full_description }')
+
+curl --silent --fail --show-error --location --include \
+    --request "PATCH" \
+    --url "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPOSITORY}" \
+    --header "Content-Type: application/json" \
+    --header "Authorization: JWT $(jq --raw-output '.token' ./token.json)" \
+    --data-raw "${payload}"
