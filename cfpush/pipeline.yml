@@ -68,7 +68,7 @@ jobs:
     plan:
       - in_parallel:
           - { get: app, trigger: false, passed: [ deploy-staging ] }
-          - { get: image }
+          - { get: image,               passed: [ deploy-staging ] }
       - task: setup-app
         image: image
         config:
