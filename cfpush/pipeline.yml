@@ -87,6 +87,7 @@ jobs:
 resources:
   - name: image
     type: docker-image
+    icon: docker
     source:
       repository: (( grab meta.image.name ))
       tag:        (( grab meta.image.tag ))
@@ -95,6 +96,7 @@ resources:
 
   - name: app
     type: git
+    icon: github
     source:
       uri:         (( grab meta.github.uri ))
       branch:      (( grab meta.github.branch_master ))

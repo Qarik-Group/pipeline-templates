@@ -485,6 +485,7 @@ resource_types:
 resources:
   - name: image
     type: docker-image
+    icon: docker
     source:
       repository: (( grab meta.image.name ))
       tag:        (( grab meta.image.tag ))
@@ -493,6 +494,7 @@ resources:
 
   - name: git
     type: git
+    icon: github
     source:
       uri:         (( grab meta.github.uri ))
       branch:      (( grab meta.github.branch ))
@@ -500,6 +502,7 @@ resources:
 
   - name: git-pull-requests
     type: pull-request
+    icon: github
     source:
       access_token: (( grab meta.github.access_token ))
       repository:   (( concat meta.github.owner "/" meta.github.repo ))
@@ -507,6 +510,7 @@ resources:
 
   - name: version
     type: semver
+    icon: aws
     source:
       driver:            s3
       bucket:            (( grab meta.aws.bucket ))
@@ -518,11 +522,13 @@ resources:
 
   - name: notify
     type: slack-notification
+    icon: slack
     source:
       url: (( grab meta.slack.webhook ))
 
   - name: github
     type: github-release
+    icon: github
     source:
       user:         (( grab meta.github.owner ))
       repository:   (( grab meta.github.repo ))
@@ -530,6 +536,7 @@ resources:
 
   - name: s3-tarball
     type: s3
+    icon: aws
     source:
       bucket:            (( grab meta.aws.bucket ))
       region_name:       (( grab meta.aws.region_name ))
@@ -539,12 +546,14 @@ resources:
 
   - name: (( concat meta.bosh.stemcell.os "-stemcell-" meta.bosh.stemcell.major ))
     type: bosh-io-stemcell
+    icon: ubuntu
     source:
       name: (( concat "bosh-" meta.bosh.stemcell.cpi "-" meta.bosh.stemcell.os "-go_agent" ))
       version_family: (( concat meta.bosh.stemcell.major ".latest" ))
 
   - name: compiled-release
     type: s3
+    icon: aws
     source:
       bucket:            (( grab meta.aws.bucket ))
       region_name:       (( grab meta.aws.region_name ))

@@ -207,6 +207,7 @@ resources:
 
   - name: source
     type: git
+    icon: github
     source:
       uri:         (( grab meta.source.github.uri ))
       branch:      (( grab meta.source.github.branch ))
@@ -214,6 +215,7 @@ resources:
 
   - name: tests
     type: git
+    icon: github
     source:
       uri:         (( grab meta.tests.github.uri ))
       branch:      (( grab meta.tests.github.branch ))
@@ -221,18 +223,21 @@ resources:
 
   - name: edge
     type: docker-image
+    icon: docker
     source:
       .: (( inject meta.dockerhub ))
       tag: edge
 
   - name: latest
     type: docker-image
+    icon: docker
     source:
       .: (( inject meta.dockerhub ))
       tag: latest
 
   - name: version
     type: semver
+    icon: aws
     source:
       driver:            s3
       bucket:            (( grab meta.aws.bucket ))
@@ -244,11 +249,13 @@ resources:
 
   - name: notify
     type: slack-notification
+    icon: slack
     source:
       url: (( grab meta.slack.webhook ))
 
   - name: github
     type: github-release
+    icon: github
     source:
       user:         (( grab meta.source.github.owner ))
       repository:   (( grab meta.source.github.repo ))
