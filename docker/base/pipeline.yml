@@ -275,14 +275,18 @@ resources:
     type: registry-image
     icon: docker
     source:
-      .: (( inject meta.dockerhub ))
+      username:   (( grab meta.dockerhub.username ))
+      password:   (( grab meta.dockerhub.password ))
+      repository: (( grab meta.dockerhub.repository ))
       tag: edge
 
   - name: latest
     type: registry-image
     icon: docker
     source:
-      .: (( inject meta.dockerhub ))
+      username:   (( grab meta.dockerhub.username ))
+      password:   (( grab meta.dockerhub.password ))
+      repository: (( grab meta.dockerhub.repository ))
       tag: latest
 
   - name: version
