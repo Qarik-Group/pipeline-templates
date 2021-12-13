@@ -73,6 +73,7 @@ groups:
   - name: (( grab meta.name ))
     jobs:
       - build
+      - build-pr
       - test
       - promote
   - name: versioning
@@ -111,6 +112,86 @@ jobs:
             username: (( grab meta.slack.username ))
             icon_url: (( grab meta.slack.icon ))
             text:     (( grab meta.slack.build_fail_msg ))
+
+  - name: build-pr
+    public: true
+    serial: true
+    plan:
+      - do:
+          - in_parallel:
+              - { get: git-pull-requests, trigger: true, version: every }
+              - { get: docker-image-build-task }
+              - { get: image }
+              - { get: tests }
+
+          - put: git-pull-requests
+            params:
+              path: git-pull-requests
+              status: PENDING
+
+          - task: build-docker-image
+            image: docker-image-build-task
+            privileged: true
+            config:
+              platform: linux
+              inputs:  [ { name: git-pull-requests, path: "." } ]
+              outputs: [ name: image ]
+              caches:  [ path: cache ]
+              run:     { path: build }
+            params:
+              UNPACK_ROOTFS: true
+            output_mapping:
+              image: edge
+            on_success:
+              put: git-pull-requests
+              params:
+                path: git-pull-requests
+                status: SUCCESS
+            on_failure:
+              put: git-pull-requests
+              params:
+                path: git-pull-requests
+                status: FAILURE
+
+          - task: test-image
+            image: edge
+            config:
+              platform: linux
+              inputs:
+                - name: source
+                - name: tests
+              run:
+                path: (( grab meta.tests.cmd ))
+                args: (( grab meta.tests.args ))
+            input_mapping:
+              source: git-pull-requests
+
+          - task: pr-success-message
+            image: image
+            config:
+              platform: linux
+              inputs:
+                - { name: git-pull-requests }
+              outputs:
+                - { name: message }
+              run:
+                path: bash
+                args:
+                - -c
+                - |
+                  set -ueo pipefail
+                  pushd git-pull-requests > /dev/null
+                  pr_url=$(git config --get pullrequest.url)
+                  popd > /dev/null
+                  echo "<${pr_url}|Pull request passed Docker build> Merge when ready: ${pr_url}" > message/body
+
+        on_success:
+          put: notify
+          params:
+            channel:  (( grab meta.slack.channel ))
+            username: (( grab meta.slack.username ))
+            icon_url: (( grab meta.slack.icon ))
+            text_file: message/body
 
   - name: test
     public: true
@@ -211,6 +292,11 @@ resource_types:
     source:
       repository: cfcommunity/slack-notification-resource
 
+  - name: pull-request
+    type: registry-image
+    source:
+      repository: teliaoss/github-pr-resource
+
 resources:
   - name: image
     type: registry-image
@@ -235,6 +321,14 @@ resources:
       uri:         (( grab meta.tests.github.uri ))
       branch:      (( grab meta.tests.github.branch ))
       private_key: (( grab meta.tests.github.private_key ))
+
+  - name: git-pull-requests
+    type: pull-request
+    icon: github
+    source:
+      access_token: (( grab meta.github.access_token ))
+      repository:   (( concat meta.github.owner "/" meta.github.repo ))
+      base_branch:  (( grab meta.github.branch ))
 
   - name: docker-image-build-task
     type: registry-image
