@@ -65,9 +65,11 @@ groups:
       - unit-tests
       - integration-tests
       - rc
+      - shipit
+  - name: versioning
+    jobs:
       - minor
       - major
-      - shipit
 
 jobs:
   - name: unit-tests

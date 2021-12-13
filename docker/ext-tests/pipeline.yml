@@ -73,10 +73,12 @@ groups:
   - name: (( grab meta.name ))
     jobs:
       - build
-      - promote
-      - minor
-      - major
       - test
+      - promote
+  - name: versioning
+    jobs:
+      - major
+      - minor
 
 jobs:
   - name: build

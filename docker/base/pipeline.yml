@@ -61,8 +61,10 @@ groups:
     jobs:
       - build
       - promote
-      - minor
+  - name: versioning
+    jobs:
       - major
+      - minor
 
 jobs:
   - name: build

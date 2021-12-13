@@ -70,11 +70,10 @@ groups:
       - rc
       - shipit
       - bump-patch
-  - name: version
+  - name: versioning
     jobs:
       - major
       - minor
-      - bump-patch
 
 jobs:
   - name: test
