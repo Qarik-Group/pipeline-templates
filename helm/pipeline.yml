@@ -79,11 +79,25 @@ jobs:
     public: true
     serial: true
     plan:
-      - get: git
-        trigger: true
-      - put: image-latest
-        params:
-          build: git
+      - do:
+          - in_parallel:
+              - { get: git, trigger: true }
+              - { get: docker-image-build-task }
+
+          - task: build-docker-image
+            image: docker-image-build-task
+            privileged: true
+            config:
+              platform: linux
+              inputs:   [ { name: git, path: "." } ]
+              outputs:  [ name: image ]
+              caches:   [ path: cache ]
+              run:      { path: build }
+
+          - put: image-latest
+            inputs: [ image ]
+            params: { image: image/image.tar }
+
         on_failure:
           put: notify
           params:
@@ -102,13 +116,19 @@ jobs:
           # - { get: git }
           - { get: version, passed: [rc], params: {bump: final} }
           - { get: git,     passed: [rc] }
-          - { get: image-latest, passed: [latest-image], params: { save: true } }
+          - { get: image-latest, passed: [latest-image], params: { format: oci } }
           - { get: image }
+
+      - load_var: version
+        file: version/number
+
       - in_parallel:
-        - put: image-latest # as 'vX.Y.Z'
+        - put: image-latest
+          inputs: [ image-latest ]
           params:
-            tag:        version/number
-            load:       image-latest
+            image:        image-latest/image.tar
+            version:      ((.:version))
+            bump_aliases: true
         - task: package-chart
           image: image
           config:
@@ -242,13 +262,13 @@ jobs:
 
 resource_types:
   - name: slack-notification
-    type: docker-image
+    type: registry-image
     source:
       repository: cfcommunity/slack-notification-resource
 
 resources:
   - name: image
-    type: docker-image
+    type: registry-image
     icon: docker
     source:
       repository: (( grab meta.image.name ))
@@ -264,8 +284,14 @@ resources:
       branch:      (( grab meta.github.branch ))
       private_key: (( grab meta.github.private_key ))
 
+  - name: docker-image-build-task
+    type: registry-image
+    icon: docker
+    source:
+      repository: concourse/oci-build-task
+
   - name: image-latest
-    type: docker-image
+    type: registry-image
     icon: docker
     source:
       .: (( inject meta.dockerhub ))

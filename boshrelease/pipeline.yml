@@ -473,18 +473,18 @@ jobs:
 
 resource_types:
   - name: slack-notification
-    type: docker-image
+    type: registry-image
     source:
       repository: cfcommunity/slack-notification-resource
 
   - name: pull-request
-    type: docker-image
+    type: registry-image
     source:
       repository: teliaoss/github-pr-resource
 
 resources:
   - name: image
-    type: docker-image
+    type: registry-image
     icon: docker
     source:
       repository: (( grab meta.image.name ))

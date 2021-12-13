@@ -84,9 +84,16 @@ jobs:
           current_app_name: (( grab meta.cf.appname ))
           show_app_log: true
 
+resource_types:
+  - name: cf-resource-with-tail
+    type: registry-image
+    source:
+      repository: govau/cf-resource
+      tag: master
+
 resources:
   - name: image
-    type: docker-image
+    type: registry-image
     icon: docker
     source:
       repository: (( grab meta.image.name ))
@@ -121,11 +128,3 @@ resources:
       password:        (( grab meta.cf.password ))
       organization:    (( grab meta.cf.organization ))
       space:           (( grab meta.cf.spaces.production ))
-
-resource_types:
-- name: cf-resource-with-tail
-  type: docker-image
-  source:
-    repository: govau/cf-resource
-    tag: master
-
