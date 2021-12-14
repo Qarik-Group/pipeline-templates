@@ -15,6 +15,7 @@ meta:
   name:     (( param "Please name your pipeline" ))
   release:  (( concat meta.name " Release" ))
   target:   (( param "Please identify the name of the target Concourse CI" ))
+  url:      (( param "Please specify the full URL of the target Concourse CI" ))
   pipeline: (( grab meta.name ))
 
   git:
@@ -50,16 +51,15 @@ meta:
     access_token: (( param "Please generate a Personal Access Token and specify it here" ))
 
   slack:
-    webhook:       (( param "Please specify your Slack Incoming Webhook Integration URL" ))
-    username:      concourse
-    icon:          https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
-    channel:       (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
-    fail_moji:     ":airplane_arriving:"
-    success_moji:  ":airplane_departure:"
-    upset_moji:    ":sadpanda:"
-    fail_url: '(( concat "<" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Concourse Failure! " meta.slack.upset_moji ">" ))'
-
-  url: (( param "What is the URL for the Concourse instance this pipeline is located on?" ))
+    webhook:      (( param "Please specify your Slack Incoming Webhook Integration URL" ))
+    channel:      (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
+    username:     concourse
+    icon:         https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
+    fail_moji:    ":airplane_arriving:"
+    success_moji: ":airplane_departure:"
+    upset_moji:   ":sadpanda:"
+    fail_url:     (( concat "<" meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
+    fail_text:    '(( concat meta.slack.fail_url " " meta.pipeline ": `${BUILD_JOB_NAME}` job failed" ))'
 
 groups:
   - name: (( grab meta.pipeline ))
@@ -80,98 +80,95 @@ jobs:
     public: true
     serial: true
     plan:
-      - do:
-        - in_parallel:
-            - { get: git, trigger: true }
-            - { get: image }
-        - task: test
-          image: image
-          config:
-            platform: linux
-            inputs:
-              - name: git
-                path: (( concat "gopath/src/" meta.go.module ))
-            caches:
-              - path: gopath
-            run:
-              path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/test" ))
-              args: []
-            params:
-              MODULE: (( grab meta.go.module ))
-        on_failure:
-          put: notify
+      - in_parallel:
+          - { get: git, trigger: true }
+          - { get: image }
+      - task: test
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: git
+              path: (( concat "gopath/src/" meta.go.module ))
+          caches:
+            - path: gopath
+          run:
+            path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/test" ))
+            args: []
           params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": test job failed" ))'
+            MODULE: (( grab meta.go.module ))
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: test-pr
     public: true
     serial: true
     plan:
-      - do:
-        - in_parallel:
-            - { get: git-pull-requests, trigger: true, version: every }
-            - { get: image }
-        - put: git-pull-requests
+      - in_parallel:
+          - { get: git-pull-requests, trigger: true, version: every }
+          - { get: image }
+      - put: git-pull-requests
+        params:
+          path: git-pull-requests
+          status: PENDING
+      - task: test
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: git-pull-requests
+              path: (( concat "gopath/src/" meta.go.module ))
+          caches:
+            - path: gopath
+          run:
+            path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/test" ))
+            args: []
+          params:
+            MODULE: (( grab meta.go.module ))
+        on_success:
+          put: git-pull-requests
           params:
             path: git-pull-requests
-            status: PENDING
-        - task: test
-          image: image
-          config:
-            platform: linux
-            inputs:
-              - name: git-pull-requests
-                path: (( concat "gopath/src/" meta.go.module ))
-            caches:
-              - path: gopath
-            run:
-              path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/test" ))
-              args: []
-            params:
-              MODULE: (( grab meta.go.module ))
-          on_success:
-            put: git-pull-requests
-            params:
-              path: git-pull-requests
-              status: SUCCESS
-          on_failure:
-            put: git-pull-requests
-            params:
-              path: git-pull-requests
-              status: FAILURE
-        - task: pr-success-message
-          image: image
-          config:
-            platform: linux
-            inputs:
-              - { name: git-pull-requests }
-            outputs:
-              - { name: message }
-            run:
-              path: sh
-              args:
-              - -ce
-              - |
-                cd git-pull-requests
-                pr_url=$(git config --get pullrequest.url)
-                cd -
-                echo "<${pr_url}|Pull request passed test> Merge when ready: ${pr_url}" > message/body
+            status: SUCCESS
         on_failure:
-          put: notify
+          put: git-pull-requests
           params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": test job failed" ))'
+            path: git-pull-requests
+            status: FAILURE
+      - task: pr-success-message
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - { name: git-pull-requests }
+          outputs:
+            - { name: message }
+          run:
+            path: sh
+            args:
+            - -ce
+            - |
+              cd git-pull-requests
+              pr_url=$(git config --get pullrequest.url)
+              cd -
+              echo "<${pr_url}|Pull request passed test> Merge when ready: ${pr_url}" > message/body
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: pre
     public: true
     serial: true
     plan:
-    - do:
       - in_parallel:
           - { get: git,     trigger: true, passed: [ test ] }
           - { get: version, trigger: true }
@@ -201,142 +198,136 @@ jobs:
               fi
           inputs:
           - name: git
-      on_failure:
-        put: notify
-        params:
-          channel:  (( grab meta.slack.channel ))
-          username: (( grab meta.slack.username ))
-          icon_url: (( grab meta.slack.icon ))
-          message: release candidate job 'pre' failed (which is unusual).
-          ok: false
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: rc
     public: true
     plan:
-      - do:
-        - in_parallel:
-            - { get: git,     trigger: true,  passed: [pre] }
-            - { get: version, trigger: false, params: {pre: rc} }
-            - { get: image,                   passed: [pre] }
-        - put: version
-          params: {file: version/number}
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": rc job failed" ))'
+      - in_parallel:
+          - { get: git,     trigger: true,  passed: [pre] }
+          - { get: version, trigger: false, params: {pre: rc} }
+          - { get: image,                   passed: [pre] }
+      - put: version
+        params: {file: version/number}
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: bump-patch
     public: true
     plan:
-      - do:
-        - { get: version, trigger: true, params: { bump: patch, pre: rc }, passed: [shipit] } # bump rc + patch, so that subesquent version bumps can trigger a new bump-patch
-        - { put: version,                params: { file: version/number} }
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": bump-patch job failed" ))'
+      - { get: version, trigger: true, params: { bump: patch, pre: rc }, passed: [shipit] } # bump rc + patch, so that subesquent version bumps can trigger a new bump-patch
+      - { put: version,                params: { file: version/number} }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: minor
     public: true
     plan:
-      - do:
-        - { get: version, trigger: false, params: {bump: minor} }
-        - { put: version,                 params: {file: version/number} }
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": minor job failed" ))'
+      - { get: version, trigger: false, params: {bump: minor} }
+      - { put: version,                 params: {file: version/number} }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: major
     public: true
     plan:
-      - do:
-        - { get: version, trigger: false, params: {bump: major} }
-        - { put: version,                 params: {file: version/number} }
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": major job failed" ))'
+      - { get: version, trigger: false, params: {bump: major} }
+      - { put: version,                 params: {file: version/number} }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: shipit
     public: true
     serial: true
     plan:
-      - do:
-        - in_parallel:
-            - { get: version, passed: [rc], params: {bump: final} }
-            - { get: git,     passed: [rc] }
-            - { get: image,   passed: [rc] }
-        - task: release
-          image: image
-          config:
-            platform: linux
-            inputs:
-              - name: version
-              - name: git
-                path: (( concat "gopath/src/" meta.go.module ))
-            outputs:
-              - name: gh
-              - name: pushme
-              - name: notifications
-            caches:
-              - path: gopath
-            run:
-              path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/shipit" ))
-              args: []
-            params:
-              BINARY:       (( grab meta.go.binary ))
-              REPO_ROOT:    (( concat "gopath/src/" meta.go.module ))
-              VERSION_FROM: version/number
-              RELEASE_NAME: (( grab meta.release ))
-              RELEASE_ROOT: gh
-              REPO_OUT:     pushme
-              NOTIFICATION_OUT: notifications
-              BRANCH:       (( grab meta.github.branch ))
-              GITHUB_OWNER: (( grab meta.github.owner ))
-              GITHUB_REPO: (( grab meta.github.repo ))
-              CMD_PKG:      (( grab meta.go.cmd_module ))
-              STATIC_BINARY:  (( grab meta.go.force_static_binary ))
-              GIT_EMAIL:      (( grab meta.git.email ))
-              GIT_NAME:       (( grab meta.git.name ))
-        - put: version
-          params: { bump: final }
-        - put: git
+      - in_parallel:
+          - { get: version, passed: [rc], params: {bump: final} }
+          - { get: git,     passed: [rc] }
+          - { get: image,   passed: [rc] }
+      - task: release
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: version
+            - name: git
+              path: (( concat "gopath/src/" meta.go.module ))
+          outputs:
+            - name: gh
+            - name: pushme
+            - name: notifications
+          caches:
+            - path: gopath
+          run:
+            path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/shipit" ))
+            args: []
           params:
-            rebase: true
-            repository: pushme/git
-        - put: github
-          params:
-            name:   gh/name
-            tag:    gh/tag
-            body:   gh/notes.md
-            globs: [gh/artifacts/*]
-        - in_parallel:
-          - put: notify
-            params:
-              channel:  (( grab meta.slack.channel ))
-              username: (( grab meta.slack.username ))
-              icon_url: (( grab meta.slack.icon ))
-              text_file: notifications/message
-        on_failure:
-          put: notify
+            BINARY:       (( grab meta.go.binary ))
+            REPO_ROOT:    (( concat "gopath/src/" meta.go.module ))
+            VERSION_FROM: version/number
+            RELEASE_NAME: (( grab meta.release ))
+            RELEASE_ROOT: gh
+            REPO_OUT:     pushme
+            NOTIFICATION_OUT: notifications
+            BRANCH:       (( grab meta.github.branch ))
+            GITHUB_OWNER: (( grab meta.github.owner ))
+            GITHUB_REPO: (( grab meta.github.repo ))
+            CMD_PKG:      (( grab meta.go.cmd_module ))
+            STATIC_BINARY:  (( grab meta.go.force_static_binary ))
+            GIT_EMAIL:      (( grab meta.git.email ))
+            GIT_NAME:       (( grab meta.git.name ))
+      - put: version
+        params: { bump: final }
+      - put: git
+        params:
+          rebase: true
+          repository: pushme/git
+      - put: github
+        params:
+          name:   gh/name
+          tag:    gh/tag
+          body:   gh/notes.md
+          globs: [gh/artifacts/*]
+      - in_parallel:
+        - put: notify
           params:
             channel:  (( grab meta.slack.channel ))
             username: (( grab meta.slack.username ))
             icon_url: (( grab meta.slack.icon ))
-            text:    '(( concat meta.slack.fail_url " " meta.pipeline ": shipit job failed" ))'
+            text_file: notifications/message
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
 resource_types:
   - name: slack-notification

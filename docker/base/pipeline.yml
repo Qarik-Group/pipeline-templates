@@ -16,7 +16,7 @@ meta:
   name:     (( param "Please name your pipeline" ))
   release:  (( grab meta.name ))
   target:   (( param "Please identify the name of the target Concourse CI" ))
-  url:      (( param "Please specify the full url of the target Concourse CI" ))
+  url:      (( param "Please specify the full URL of the target Concourse CI" ))
   pipeline: (( grab meta.name ))
 
   git:
@@ -50,11 +50,15 @@ meta:
     repository: (( param "Please specify the name of the image (repo/name) that you are building" ))
 
   slack:
-    webhook:       (( param "Please specify your Slack Incoming Webhook Integration URL" ))
-    notification: '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed to build " meta.name "!  Click for details.>" ))'
-    channel:       (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
-    username:      concourse
-    icon:          https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
+    webhook:      (( param "Please specify your Slack Incoming Webhook Integration URL" ))
+    channel:      (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
+    username:     concourse
+    icon:         https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
+    success_moji: ":airplane_departure:"
+    fail_moji:    ":airplane_arriving:"
+    upset_moji:   ":sadpanda:"
+    fail_url:     (( concat "<" meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
+    fail_text:    '(( concat meta.slack.fail_url " " meta.pipeline ": `${BUILD_JOB_NAME}` job failed" ))'
 
 groups:
   - name: (( grab meta.name ))
@@ -72,106 +76,118 @@ jobs:
     public: true
     serial: true
     plan:
-      - do:
-          - in_parallel:
-              - { get: git, trigger: true }
-              - { get: docker-image-build-task }
+      - in_parallel:
+          - { get: git, trigger: true }
+          - { get: docker-image-build-task }
 
-          - task: build-docker-image
-            image: docker-image-build-task
-            privileged: true
-            config:
-              platform: linux
-              inputs:  [ { name: git, path: "." } ]
-              outputs: [ name: image ]
-              caches:  [ path: cache ]
-              run:     { path: build }
+      - task: build-docker-image
+        image: docker-image-build-task
+        privileged: true
+        config:
+          platform: linux
+          inputs:  [ { name: git, path: "." } ]
+          outputs: [ name: image ]
+          caches:  [ path: cache ]
+          run:     { path: build }
 
-          - put: edge
-            inputs: [ image ]
-            params: { image: image/image.tar }
+      - put: edge
+        inputs: [ image ]
+        params: { image: image/image.tar }
 
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:     (( grab meta.slack.notification ))
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: build-pr
     public: true
     serial: true
     plan:
-      - do:
-          - in_parallel:
-              - { get: git-pull-requests, trigger: true, version: every }
-              - { get: docker-image-build-task }
-              - { get: image }
+      - in_parallel:
+          - { get: git-pull-requests, trigger: true, version: every }
+          - { get: docker-image-build-task }
+          - { get: image }
 
-          - put: git-pull-requests
-            params:
-              path: git-pull-requests
-              status: PENDING
+      - put: git-pull-requests
+        params:
+          path: git-pull-requests
+          status: PENDING
 
-          - task: build-docker-image
-            image: docker-image-build-task
-            privileged: true
-            config:
-              platform: linux
-              inputs:  [ { name: git-pull-requests, path: "." } ]
-              outputs: [ name: image ]
-              caches:  [ path: cache ]
-              run:     { path: build }
-            on_success:
-              put: git-pull-requests
-              params:
-                path: git-pull-requests
-                status: SUCCESS
-            on_failure:
-              put: git-pull-requests
-              params:
-                path: git-pull-requests
-                status: FAILURE
-
-          - task: pr-success-message
-            image: image
-            config:
-              platform: linux
-              inputs:
-                - { name: git-pull-requests }
-              outputs:
-                - { name: message }
-              run:
-                path: bash
-                args:
-                - -c
-                - |
-                  set -ueo pipefail
-                  pushd git-pull-requests > /dev/null
-                  pr_url=$(git config --get pullrequest.url)
-                  popd > /dev/null
-                  echo "<${pr_url}|Pull request passed Docker build> Merge when ready: ${pr_url}" > message/body
-
+      - task: build-docker-image
+        image: docker-image-build-task
+        privileged: true
+        config:
+          platform: linux
+          inputs:  [ { name: git-pull-requests, path: "." } ]
+          outputs: [ name: image ]
+          caches:  [ path: cache ]
+          run:     { path: build }
         on_success:
-          put: notify
+          put: git-pull-requests
           params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text_file: message/body
+            path: git-pull-requests
+            status: SUCCESS
+        on_failure:
+          put: git-pull-requests
+          params:
+            path: git-pull-requests
+            status: FAILURE
+
+      - task: pr-success-message
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - { name: git-pull-requests }
+          outputs:
+            - { name: message }
+          run:
+            path: bash
+            args:
+            - -c
+            - |
+              set -ueo pipefail
+              pushd git-pull-requests > /dev/null
+              pr_url=$(git config --get pullrequest.url)
+              popd > /dev/null
+              echo "<${pr_url}|Pull request passed Docker build> Merge when ready: ${pr_url}" > message/body
+
+    on_success:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text_file: message/body
 
   - name: minor
     public: true
     plan:
       - { get: version, trigger: false, params: {bump: minor} }
       - { put: version,                 params: {file: version/number} }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: major
     public: true
     plan:
       - { get: version, trigger: false, params: {bump: major} }
       - { put: version,                 params: {file: version/number} }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: promote
     public: true
@@ -240,6 +256,13 @@ jobs:
           name: gh/name
           tag:  gh/tag
           body: gh/notes.md
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
 resource_types:
   - name: slack-notification
