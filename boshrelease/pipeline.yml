@@ -242,34 +242,8 @@ jobs:
     serial: true
     plan:
       - in_parallel:
-          - { get: git,     trigger: true,  passed: [pre] }
-          - { get: version, trigger: false, params: {pre: rc} }
-          - { get: image }
-      - task: release-notes
-        image: image
-        config:
-          platform: linux
-          inputs:
-              - { name: git }
-          run:
-            path: sh
-            args:
-            - -ce
-            - |
-              cd git
-              if [ -f ci/release_notes.md ]; then
-                echo "######   RELEASE NOTES   ###############"
-                echo
-                cat ci/release_notes.md
-                echo
-                echo "########################################"
-                echo
-              else
-                echo "NO RELEASE NOTES HAVE BEEN WRITTEN"
-                echo "You *might* want to do that before"
-                echo "hitting (+) on that shipit job..."
-                echo
-              fi
+          - { get: git,     trigger: true, passed: [ pre ] }
+          - { get: version, params: { pre: rc } }
       - put: version
         params: {file: version/number}
     on_failure:
@@ -327,8 +301,8 @@ jobs:
     serial: true
     plan:
       - in_parallel:
-          - { get: version, passed: [rc], params: {bump: final} }
-          - { get: git,     passed: [rc] }
+          - { get: version, passed: [ rc ], params: { bump: final } }
+          - { get: git,     passed: [ rc ] }
           - { get: image }
       - task: release
         image: image

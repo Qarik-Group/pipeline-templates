@@ -65,6 +65,8 @@ groups:
     jobs:
       - build
       - build-pr
+      - pre
+      - rc
       - promote
   - name: versioning
     jobs:
@@ -163,6 +165,66 @@ jobs:
         icon_url: (( grab meta.slack.icon ))
         text_file: message/body
 
+  - name: pre
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: edge,    trigger: true, passed: [ build ] }
+          - { get: git,                    passed: [ build ] }
+          - { get: version, trigger: true }
+          - { get: image }
+      - task: release-notes
+        image: image
+        config:
+          platform: linux
+          run:
+            path: sh
+            args:
+            - -ce
+            - |
+              cd git
+              if [ -f ci/release_notes.md ]; then
+                echo "######   RELEASE NOTES   ###############"
+                echo
+                cat ci/release_notes.md
+                echo
+                echo "########################################"
+                echo
+              else
+                echo "NO RELEASE NOTES HAVE BEEN WRITTEN"
+                echo "You *might* want to do that before"
+                echo "hitting (+) on that shipit job..."
+                echo
+              fi
+          inputs:
+          - name: git
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
+
+  - name: rc
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: edge,    trigger: true, passed: [ pre ] }
+          - { get: git,                    passed: [ pre ] }
+          - { get: version, params: { pre: rc } }
+      - put: version
+        params: {file: version/number}
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
+
   - name: minor
     public: true
     serial: true
@@ -196,9 +258,9 @@ jobs:
     serial: true
     plan:
       - in_parallel:
-          - { get: version }
-          - { get: edge, passed: [build], params: { format: oci } }
-          - { get: git,  passed: [build] }
+          - { get: version, passed: [ rc ], params: { bump: final } }
+          - { get: edge,    passed: [ rc ], params: { format: oci } }
+          - { get: git,     passed: [ rc ] }
           - { get: image }
 
       - task: release
