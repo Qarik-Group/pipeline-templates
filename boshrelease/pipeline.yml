@@ -410,17 +410,16 @@ jobs:
     serial: true
     plan:
       - in_parallel:
-          steps:
-            - get: git
-            - get: github
-              passed: [compile-release]
-              trigger: true
-            - get: (( concat meta.bosh.stemcell.os "-stemcell-" meta.bosh.stemcell.major ))
-              passed: [compile-release]
-              params: {tarball: false}
-            - get: compiled-release
-              passed: [compile-release]
-            - { get: image }
+          - get: git
+          - get: github
+            passed: [compile-release]
+            trigger: true
+          - get: (( concat meta.bosh.stemcell.os "-stemcell-" meta.bosh.stemcell.major ))
+            passed: [compile-release]
+            params: {tarball: false}
+          - get: compiled-release
+            passed: [compile-release]
+          - get: image
       - task: use-compiled-releases
         image: image
         config:
