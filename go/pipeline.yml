@@ -208,6 +208,7 @@ jobs:
 
   - name: rc
     public: true
+    serial: true
     plan:
       - in_parallel:
           - { get: git,     trigger: true,  passed: [pre] }
@@ -225,6 +226,7 @@ jobs:
 
   - name: bump-patch
     public: true
+    serial: true
     plan:
       - { get: version, trigger: true, params: { bump: patch, pre: rc }, passed: [shipit] } # bump rc + patch, so that subesquent version bumps can trigger a new bump-patch
       - { put: version,                params: { file: version/number} }
@@ -238,6 +240,7 @@ jobs:
 
   - name: minor
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: minor} }
       - { put: version,                 params: {file: version/number} }
@@ -251,6 +254,7 @@ jobs:
 
   - name: major
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: major} }
       - { put: version,                 params: {file: version/number} }

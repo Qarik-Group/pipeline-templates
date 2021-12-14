@@ -75,6 +75,7 @@ groups:
 jobs:
   - name: unit-tests
     public: true
+    serial: true
     plan:
       - in_parallel:
         - { get: git, trigger: true }
@@ -129,6 +130,7 @@ jobs:
 
   - name: rc
     public: true
+    serial: true
     plan:
       - in_parallel:
           - { get: git,     trigger: true,  passed: [unit-tests, integration-tests] }
@@ -145,6 +147,7 @@ jobs:
 
   - name: minor
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: minor} }
       - { put: version,                 params: {file: version/number} }
@@ -158,6 +161,7 @@ jobs:
 
   - name: major
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: major} }
       - { put: version,                 params: {file: version/number} }

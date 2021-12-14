@@ -282,6 +282,7 @@ jobs:
 
   - name: minor
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: minor} }
       - { put: version,                 params: {file: version/number} }
@@ -295,6 +296,7 @@ jobs:
 
   - name: patch
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: patch} }
       - { put: version,                 params: {file: version/number} }
@@ -308,6 +310,7 @@ jobs:
 
   - name: major
     public: true
+    serial: true
     plan:
       - { get: version, trigger: false, params: {bump: major} }
       - { put: version,                 params: {file: version/number} }
@@ -387,7 +390,8 @@ jobs:
         text:     (( grab meta.slack.fail_text ))
 
   - name: compile-release
-    old_name: compile-release-456
+    public: true
+    serial: true
     plan:
       - in_parallel:
           - { get: git }
@@ -428,6 +432,8 @@ jobs:
         text:     (( grab meta.slack.fail_text ))
 
   - name: use-compiled-releases
+    public: true
+    serial: true
     plan:
       - in_parallel:
           steps:
