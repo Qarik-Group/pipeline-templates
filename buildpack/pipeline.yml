@@ -135,6 +135,7 @@ jobs:
       - in_parallel:
           - { get: git,     trigger: true,  passed: [unit-tests, integration-tests] }
           - { get: version, trigger: true, params: {pre: rc} }
+          - { get: image }
       - put: version
         params: {file: version/number}
     on_failure:

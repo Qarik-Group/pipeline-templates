@@ -203,7 +203,7 @@ jobs:
       - in_parallel:
           - { get: git,     trigger: true, passed: [ testflight ] }
           - { get: version, trigger: true }
-          - { get: image,                  passed: [ testflight ] }
+          - { get: image }
       - task: release-notes
         image: image
         config:
@@ -244,7 +244,7 @@ jobs:
       - in_parallel:
           - { get: git,     trigger: true,  passed: [pre] }
           - { get: version, trigger: false, params: {pre: rc} }
-          - { get: image,                   passed: [pre] }
+          - { get: image }
       - task: release-notes
         image: image
         config:
@@ -329,7 +329,7 @@ jobs:
       - in_parallel:
           - { get: version, passed: [rc], params: {bump: final} }
           - { get: git,     passed: [rc] }
-          - { get: image,   passed: [rc] }
+          - { get: image }
       - task: release
         image: image
         config:
@@ -446,7 +446,7 @@ jobs:
               params: {tarball: false}
             - get: compiled-release
               passed: [compile-release]
-            - { get: image, passed: [compile-release] }
+            - { get: image }
       - task: use-compiled-releases
         image: image
         config:

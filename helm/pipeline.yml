@@ -115,7 +115,7 @@ jobs:
           - { get: version,      passed: [rc], params: {bump: final} }
           - { get: git,          passed: [rc] }
           - { get: image-latest, passed: [latest-image], params: { format: oci } }
-          - { get: image,        passed: [rc] }
+          - { get: image }
 
       - load_var: version
         file: version/number
