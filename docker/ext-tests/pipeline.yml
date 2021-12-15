@@ -228,7 +228,7 @@ jobs:
     plan:
       - in_parallel:
           - { get: edge,    trigger: true, passed: [ test ] }
-          - { get: source,                 passed: [ test ] }
+          - { get: source,  trigger: true, passed: [ test ] }
           - { get: version, trigger: true }
           - { get: image }
       - task: release-notes
@@ -270,7 +270,7 @@ jobs:
     plan:
       - in_parallel:
           - { get: edge,    trigger: true, passed: [ pre ] }
-          - { get: source,                 passed: [ pre ] }
+          - { get: source,  trigger: true, passed: [ pre ] }
           - { get: version, params: { pre: rc } }
       - put: version
         params: {file: version/number}
