@@ -2,11 +2,18 @@
 
 set -e
 
+: ${REPO_ROOT:?required}
+: ${REPO_OUT:?required}
 : ${BLOB_DIR:?required}
 : ${BLOB_NAME:?required}
 : ${BLOB_BINARY:?required}
 : ${BLOB_CLEANUP:?required}
 : ${BLOB_DESTINATION:?required}
+: ${AWS_ACCESS_KEY:?required}
+: ${AWS_SECRET_KEY:?required}
+: ${GIT_EMAIL:?required}
+: ${GIT_NAME:?required}
+: ${BRANCH:?required}
 
 # if git-release, then look for tag
 # git describe --tags `git rev-list --tags --max-count=1`
@@ -25,15 +32,15 @@ set -e
 }
 VERSION=$(cat ${BLOB_DIR}/version)
 
-pushd ${REPO_ROOT:?required}
+pushd ${REPO_ROOT}
 
 cat <<EOF >config/private.yml
 ---
 blobstore:
   provider: s3
   options:
-    access_key_id: ${AWS_ACCESS_KEY:?required}
-    secret_access_key: ${AWS_SECRET_KEY:?required}
+    access_key_id: ${AWS_ACCESS_KEY}
+    secret_access_key: ${AWS_SECRET_KEY}
 EOF
 
 blobs_to_remove=$(spruce json config/blobs.yml | jq -r "keys[] | select(test(\"${BLOB_CLEANUP}\"))")
@@ -57,10 +64,10 @@ EOF
 
   # GIT!
   if [[ -z $(git config --global user.email) ]]; then
-    git config --global user.email "ci@starkandwayne.com"
+    git config --global user.email "${GIT_EMAIL}"
   fi
   if [[ -z $(git config --global user.name) ]]; then
-    git config --global user.name "CI Bot"
+    git config --global user.name "${GIT_NAME}"
   fi
 
   (cd ${REPO_ROOT}

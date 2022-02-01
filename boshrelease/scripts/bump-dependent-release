@@ -13,6 +13,9 @@ set -e
 : ${REPO_OUT:?required}
 : ${RELEASE:?required}
 : ${NAME:?required}
+: ${GIT_EMAIL:?required}
+: ${GIT_NAME:?required}
+: ${BRANCH:?required}
 
 if [[ ! -f ${RELEASE}/version ]]; then
   echo "Director ${RELEASE} must have file /version"

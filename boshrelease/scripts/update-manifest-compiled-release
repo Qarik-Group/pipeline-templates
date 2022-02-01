@@ -20,8 +20,6 @@ if [[ "${STEMCELL_VERSION:-X}" == "X" ]]; then
   echo "USAGE: update-manifest-release NAME VERSION URL SHA1 STEMCELL_OS STEMCELL_VERSION"
   exit 1
 fi
-: ${REPO_ROOT:?required}
-: ${REPO_OUT:?required}
 : ${MANIFESTS_DIR:?required}
 
 # So, this is a nested bash/spruce/jq combo.

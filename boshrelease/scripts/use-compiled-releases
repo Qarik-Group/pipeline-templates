@@ -2,6 +2,12 @@
 
 set -eu
 
+: ${REPO_ROOT:?required}
+: ${REPO_OUT:?required}
+: ${GIT_EMAIL:?required}
+: ${GIT_NAME:?required}
+: ${BRANCH:?required}
+
 git clone ${REPO_ROOT} ${REPO_OUT}
 
 if [[ -z $(git config --global user.email) ]]; then
