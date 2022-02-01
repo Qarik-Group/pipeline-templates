@@ -37,7 +37,6 @@ pushd ${REPO_ROOT}
 cat <<EOF >config/private.yml
 ---
 blobstore:
-  provider: s3
   options:
     access_key_id: ${AWS_ACCESS_KEY}
     secret_access_key: ${AWS_SECRET_KEY}

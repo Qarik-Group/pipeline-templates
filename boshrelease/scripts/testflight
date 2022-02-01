@@ -82,7 +82,6 @@ bosh -n reset-release # in case dev_releases/ is in repo accidentally
 cat > config/private.yml <<YAML
 ---
 blobstore:
-  provider: s3
   options:
     access_key_id: ${AWS_ACCESS_KEY}
     secret_access_key: ${AWS_SECRET_KEY}
