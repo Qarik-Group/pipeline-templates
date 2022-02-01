@@ -18,7 +18,7 @@ if [[ -z $(git config --global user.name) ]]; then
 fi
 
 STEMCELL_OS=${STEMCELL_OS:-ubuntu-bionic}
-STEMCELL_VERSION=$(cat stemcell/version)
+stemcell_version=$(cat stemcell/version)
 
 releases=($(ls -d *compiled-release))
 
@@ -31,7 +31,7 @@ for release in "${releases[@]}"; do
   release_sha1=$(sha1sum $release/*.tgz | awk '{print $1}')
 
   pushd ${REPO_OUT}
-    ci/scripts/update-manifest-compiled-release $release_name $release_version $release_url $release_sha1 $STEMCELL_OS $STEMCELL_VERSION
+    ci/scripts/update-manifest-compiled-release $release_name $release_version $release_url $release_sha1 $STEMCELL_OS $stemcell_version
   popd
 done
 
@@ -39,5 +39,5 @@ pushd ${REPO_OUT}
   git merge --no-edit ${BRANCH}
   git add -A
   git status
-  git commit -m "Updated compiled releases for ${STEMCELL_OS}/${STEMCELL_VERSION}"
+  git commit -m "Updated compiled releases for ${STEMCELL_OS}/${stemcell_version}"
 popd

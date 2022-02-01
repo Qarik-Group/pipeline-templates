@@ -17,7 +17,7 @@ set -eu
 : ${AWS_ACCESS_KEY:?required}
 : ${AWS_SECRET_KEY:?required}
 DEBUG=${DEBUG:-}
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 header() {
 	echo
@@ -71,7 +71,7 @@ if [[ ! -z ${op_patch_file_errors} ]]; then
 	exit 1
 fi
 
-$DIR/wait-until-proxy-bosh-cf-running
+${script_dir}/wait-until-proxy-bosh-cf-running
 if [[ "${PROXY_IP:-X}" != "X" ]] ; then export BOSH_ALL_PROXY=socks5://localhost:9999 ; fi
 
 delete_deployment

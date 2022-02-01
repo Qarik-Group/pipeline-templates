@@ -30,7 +30,7 @@ set -e
   echo ${tag//v/} > ${BLOB_DIR}/version
   tar czf ${BLOB_DIR}/${BLOB_NAME}-${tag//v/}.tar.gz ${resource_dir}
 }
-VERSION=$(cat ${BLOB_DIR}/version)
+version=$(cat ${BLOB_DIR}/version)
 
 pushd ${REPO_ROOT}
 
@@ -48,7 +48,7 @@ if [[ ! -z $blobs_to_remove ]]; then
   echo "$blobs_to_remove" | xargs -L1 bosh remove-blob
 fi
 
-# expand ${VERSION} env var into file path
+# expand ${version} env var into file path
 eval "blob_destination=${BLOB_DESTINATION}"
 bosh add-blob ../${BLOB_DIR}/${BLOB_BINARY} "${blob_destination}"
 bosh -n upload-blobs
@@ -58,7 +58,7 @@ popd
 if [[ -n "$(cd ${REPO_ROOT}; git status --porcelain)" ]]; then
   pushd ${REPO_ROOT}
   cat <<EOF >>ci/release_notes.md
-* Bumped ${BLOB_URL} to v${VERSION}
+* Bumped ${BLOB_URL} to v${version}
 EOF
   popd
 
@@ -74,7 +74,7 @@ EOF
    git merge --no-edit ${BRANCH}
    git add -A
    git status
-   git commit -m "Bumped ${BLOB_NAME} to v${VERSION}")
+   git commit -m "Bumped ${BLOB_NAME} to v${version}")
 fi
 
 # so that future steps in the pipeline can push our changes
