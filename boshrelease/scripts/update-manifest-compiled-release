@@ -18,7 +18,7 @@ STEMCELL_VERSION=$6
 
 if [[ "${STEMCELL_VERSION:-X}" == "X" ]]; then
   echo "USAGE: update-manifest-release NAME VERSION URL SHA1 STEMCELL_OS STEMCELL_VERSION"
-  exit 1
+  exit 2
 fi
 : ${MANIFESTS_DIR:?required}
 
