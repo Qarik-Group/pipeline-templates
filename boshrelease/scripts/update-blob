@@ -9,8 +9,6 @@ set -e
 : ${BLOB_BINARY:?required}
 : ${BLOB_CLEANUP:?required}
 : ${BLOB_DESTINATION:?required}
-: ${AWS_ACCESS_KEY:?required}
-: ${AWS_SECRET_KEY:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
 : ${BRANCH:?required}
@@ -34,13 +32,16 @@ version=$(cat ${BLOB_DIR}/version)
 
 pushd ${REPO_ROOT}
 
-cat <<EOF >config/private.yml
+blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
+if [[ ${blobstore_provider} == "s3" ]]; then
+  cat <<EOF >config/private.yml
 ---
 blobstore:
   options:
-    access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY}
+    access_key_id: ${AWS_ACCESS_KEY:?required}
+    secret_access_key: ${AWS_SECRET_KEY:?required}
 EOF
+fi
 
 blobs_to_remove=$(spruce json config/blobs.yml | jq -r "keys[] | select(test(\"${BLOB_CLEANUP}\"))")
 if [[ ! -z $blobs_to_remove ]]; then

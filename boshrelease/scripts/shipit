@@ -25,8 +25,6 @@ header() {
 : ${BRANCH:?required}
 : ${GITHUB_OWNER:?required}
 : ${VERSION_FROM:?required}
-: ${AWS_ACCESS_KEY:?required}
-: ${AWS_SECRET_KEY:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
 
@@ -55,13 +53,16 @@ pushd ${REPO_OUT}
 release_name=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
   || release_name=$(bosh int config/final.yml --path /name)
 
-cat > config/private.yml <<YAML
+blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
+if [[ ${blobstore_provider} == "s3" ]]; then
+  cat > config/private.yml <<YAML
 ---
 blobstore:
   options:
-    access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY}
+    access_key_id: ${AWS_ACCESS_KEY:?required}
+    secret_access_key: ${AWS_SECRET_KEY:?required}
 YAML
+fi
 
 header "Pulling in any git submodules..."
 git submodule update --init --recursive --force
