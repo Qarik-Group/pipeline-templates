@@ -78,12 +78,12 @@ header "Creating candidate BOSH release..."
 bosh -n reset-release # in case dev_releases/ is in repo accidentally
 
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
-if [[ ${blobstore_provider} == "s3" ]]; then
+if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
 	cat > config/private.yml <<YAML
 ---
 blobstore:
   options:
-    access_key_id: ${AWS_ACCESS_KEY:?required}
+    access_key_id: ${AWS_ACCESS_KEY}
     secret_access_key: ${AWS_SECRET_KEY:?required}
 YAML
 fi
