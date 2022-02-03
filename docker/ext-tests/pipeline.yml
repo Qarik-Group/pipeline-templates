@@ -183,10 +183,13 @@ jobs:
             - -c
             - |
               set -ueo pipefail
-              pushd git-pull-requests > /dev/null
-              pr_url=$(git config --get pullrequest.url)
-              popd > /dev/null
-              echo "<${pr_url}|Pull request passed Docker build> Merge when ready: ${pr_url}" > message/body
+              pr_author=$(< git-pull-requests/.git/resource/author)
+              pr_title=$( < git-pull-requests/.git/resource/title)
+              pr_url=$(   < git-pull-requests/.git/resource/url)
+              echo "Pull request “_<${pr_url}|${pr_title}>_” by *${pr_author}*" \
+                "has passed Docker build :tada:" \
+                "Merge when ready: ${pr_url}" \
+                > message/body
 
     on_success:
       put: notify
