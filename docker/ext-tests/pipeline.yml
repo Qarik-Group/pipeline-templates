@@ -102,9 +102,11 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: source, path: "." } ]
-          outputs: [ name: built-image ]
+          outputs: [ name: image ]
           caches:  [ path: cache ]
           run:     { path: build }
+        output_mapping:
+          image: built-image
 
       - put: edge
         inputs: [ built-image ]
@@ -139,9 +141,13 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: git-pull-requests, path: "." } ]
-          outputs: [ name: built-image ]
+          outputs: [ name: image ]
           caches:  [ path: cache ]
           run:     { path: build }
+        output_mapping:
+          image: built-image
+        params:
+          UNPACK_ROOTFS: true
         on_success:
           put: git-pull-requests
           params:
