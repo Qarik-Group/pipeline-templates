@@ -142,10 +142,8 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs:
-            - { name: git-pull-requests }
-          outputs:
-            - { name: message }
+          inputs:  [ name: git-pull-requests ]
+          outputs: [ name: message ]
           run:
             path: bash
             args:
@@ -181,6 +179,7 @@ jobs:
         image: image
         config:
           platform: linux
+          inputs: [ name: git ]
           run:
             path: sh
             args:
@@ -200,8 +199,6 @@ jobs:
                 echo "hitting (+) on that shipit job..."
                 echo
               fi
-          inputs:
-          - name: git
     on_failure:
       put: notify
       params:
@@ -219,7 +216,7 @@ jobs:
           - { get: git,     trigger: true, passed: [ pre ] }
           - { get: version, params: { pre: rc } }
       - put: version
-        params: {file: version/number}
+        params: { file: version/number }
     on_failure:
       put: notify
       params:
@@ -232,8 +229,8 @@ jobs:
     public: true
     serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: minor} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: minor } }
+      - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
       params:
@@ -246,8 +243,8 @@ jobs:
     public: true
     serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: major} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: major } }
+      - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
       params:

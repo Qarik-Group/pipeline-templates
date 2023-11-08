@@ -52,8 +52,8 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs: [{name: app}]
-          outputs: [{name: app-with-setup}]
+          inputs:  [ name: app ]
+          outputs: [ name: app-with-setup ]
           run:
             path: app/ci/scripts/setup-app.sh
       - put: cf-push-staging
@@ -73,8 +73,8 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs: [{name: app}]
-          outputs: [{name: app-with-setup}]
+          inputs:  [ name: app ]
+          outputs: [ name: app-with-setup ]
           run:
             path: app/ci/scripts/setup-app.sh
       - put: cf-push-production

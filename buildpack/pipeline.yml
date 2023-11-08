@@ -85,8 +85,7 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs:
-            - { name: git }
+          inputs: [ name: git ]
           run:
             path: ./git/scripts/unit.sh
             args: []
@@ -110,8 +109,7 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs:
-            - { name: git }
+          inputs: [ name: git ]
           run:
             path: ./git/scripts/integration.sh
             args: []
@@ -141,6 +139,7 @@ jobs:
         image: image
         config:
           platform: linux
+          inputs: [ name: git ]
           run:
             path: sh
             args:
@@ -160,8 +159,6 @@ jobs:
                 echo "hitting (+) on that shipit job..."
                 echo
               fi
-          inputs:
-          - name: git
     on_failure:
       put: notify
       params:
@@ -178,7 +175,7 @@ jobs:
           - { get: git,     trigger: true,  passed: [ pre ] }
           - { get: version, params: { pre: rc } }
       - put: version
-        params: {file: version/number}
+        params: { file: version/number }
     on_failure:
       put: notify
       params:
@@ -191,8 +188,8 @@ jobs:
     public: true
     serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: minor} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: minor } }
+      - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
       params:
@@ -205,8 +202,8 @@ jobs:
     public: true
     serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: major} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: major } }
+      - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
       params:
@@ -255,10 +252,10 @@ jobs:
           repository: pushme
       - put: github
         params:
-          name:   gh/name
-          tag:    gh/tag
-          body:   gh/notes.md
-          globs: [gh/artifacts/*]
+          name:  gh/name
+          tag:   gh/tag
+          body:  gh/notes.md
+          globs: [ gh/artifacts/* ]
       - put: version
         params:
           bump: patch
