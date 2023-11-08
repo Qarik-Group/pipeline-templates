@@ -88,12 +88,12 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: git, path: "." } ]
-          outputs: [ name: image ]
+          outputs: [ name: built-image ]
           caches:  [ path: cache ]
           run:     { path: build }
 
       - put: edge
-        inputs: [ image ]
+        inputs: [ built-image ]
         params: { image: image/image.tar }
 
     on_failure:
@@ -124,7 +124,7 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: git-pull-requests, path: "." } ]
-          outputs: [ name: image ]
+          outputs: [ name: built-image ]
           caches:  [ path: cache ]
           run:     { path: build }
         on_success:

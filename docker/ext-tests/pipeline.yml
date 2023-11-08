@@ -101,12 +101,12 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: source, path: "." } ]
-          outputs: [ name: image ]
+          outputs: [ name: built-image ]
           caches:  [ path: cache ]
           run:     { path: build }
 
       - put: edge
-        inputs: [ image ]
+        inputs: [ built-image ]
         params: { image: image/image.tar }
 
     on_failure:
@@ -138,13 +138,9 @@ jobs:
         config:
           platform: linux
           inputs:  [ { name: git-pull-requests, path: "." } ]
-          outputs: [ name: image ]
+          outputs: [ name: built-image ]
           caches:  [ path: cache ]
           run:     { path: build }
-        params:
-          UNPACK_ROOTFS: true
-        output_mapping:
-          image: edge
         on_success:
           put: git-pull-requests
           params:
@@ -157,17 +153,15 @@ jobs:
             status: FAILURE
 
       - task: test-image
-        image: edge
+        image: built-image
         config:
           platform: linux
           inputs:
-            - name: source
-            - name: tests
+            - { name: git-pull-requests, path: source }
+            - { name: tests }
           run:
             path: (( grab meta.tests.cmd ))
             args: (( grab meta.tests.args ))
-        input_mapping:
-          source: git-pull-requests
 
       - task: pr-success-message
         image: image
