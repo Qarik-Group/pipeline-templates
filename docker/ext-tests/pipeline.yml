@@ -108,7 +108,7 @@ jobs:
 
       - put: edge
         inputs: [ built-image ]
-        params: { image: image/image.tar }
+        params: { image: built-image/image.tar }
 
     on_failure:
       put: notify
