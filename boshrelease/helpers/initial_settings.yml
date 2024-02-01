@@ -20,12 +20,6 @@ meta:
       username: ((docker_registry_username))
       password: ((docker-registry-password))
 
-  bosh-lite:
-    target:   ((bosh-lite-environment))
-    cacert:   ((bosh-lite-ca-cert))
-    username: ((bosh-lite-client))
-    password: ((bosh-lite-client-secret))
-
   aws:
     bucket:      (( grab meta.pipeline ))
     region_name: us-east-1
@@ -38,6 +32,10 @@ meta:
     branch: $(git branch --no-color | awk '{print $2}')
     private_key:  ((github-private-key))
     access_token: ((github-access-token))
+
+  bosh:
+    stemcell:
+      cpi: warden-boshlite
 
   slack:
     webhook:       ((slack-webhook))

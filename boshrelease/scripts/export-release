@@ -37,8 +37,8 @@ fi
 
 cd release
 tar -xzf *.tgz $( tar -tzf *.tgz | grep 'release.MF' )
-RELEASE_NAME=$( grep -E '^name: ' release.MF | awk '{print $2}' | tr -d "\"'" )
-RELEASE_VERSION=$( grep -E '^version: ' release.MF | awk '{print $2}' | tr -d "\"'" )
+release_name=$(bosh int release.MF --path /name)
+release_version=$(bosh int release.MF --path /version)
 
 bosh -n upload-release *.tgz
 cd ../
@@ -49,10 +49,10 @@ cd ../
 
 cat > manifest.yml <<EOF
 ---
-name: compilation-${RELEASE_NAME}
+name: compilation-${release_name}
 releases:
-- name: "$RELEASE_NAME"
-  version: "$RELEASE_VERSION"
+- name: "${release_name}"
+  version: "${release_version}"
 stemcells:
 - alias: default
   os: "$STEMCELL_OS"
@@ -65,7 +65,7 @@ update:
 instance_groups: []
 EOF
 
-export BOSH_DEPLOYMENT="compilation-${RELEASE_NAME}"
+export BOSH_DEPLOYMENT="compilation-${release_name}"
 
 delete_compilation_deployment() {
 	echo "Cleaning up deployment..."
@@ -75,8 +75,8 @@ trap "echo; echo; echo; sleep 10; delete_compilation_deployment" EXIT SIGINT SIG
 
 
 bosh -n deploy manifest.yml
-bosh    export-release $RELEASE_NAME/$RELEASE_VERSION $STEMCELL_OS/$STEMCELL_VERSION
+bosh    export-release ${release_name}/${release_version} $STEMCELL_OS/$STEMCELL_VERSION
 
-mkdir -p compiled-release/compiled-releases/$RELEASE_NAME
-mv *.tgz compiled-release/compiled-releases/$RELEASE_NAME/$( echo *.tgz | sed "s/\.tgz$/-$( date -u +%Y%m%d%H%M%S ).tgz/" )
-sha1sum  compiled-release/compiled-releases/$RELEASE_NAME/*.tgz
+mkdir -p compiled-release/compiled-releases/${release_name}
+mv *.tgz compiled-release/compiled-releases/${release_name}/$( echo *.tgz | sed "s/\.tgz$/-$( date -u +%Y%m%d%H%M%S ).tgz/" )
+sha1sum  compiled-release/compiled-releases/${release_name}/*.tgz

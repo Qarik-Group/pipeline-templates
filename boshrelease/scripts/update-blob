@@ -2,11 +2,16 @@
 
 set -e
 
+: ${REPO_ROOT:?required}
+: ${REPO_OUT:?required}
 : ${BLOB_DIR:?required}
 : ${BLOB_NAME:?required}
 : ${BLOB_BINARY:?required}
 : ${BLOB_CLEANUP:?required}
 : ${BLOB_DESTINATION:?required}
+: ${GIT_EMAIL:?required}
+: ${GIT_NAME:?required}
+: ${BRANCH:?required}
 
 # if git-release, then look for tag
 # git describe --tags `git rev-list --tags --max-count=1`
@@ -23,25 +28,27 @@ set -e
   echo ${tag//v/} > ${BLOB_DIR}/version
   tar czf ${BLOB_DIR}/${BLOB_NAME}-${tag//v/}.tar.gz ${resource_dir}
 }
-VERSION=$(cat ${BLOB_DIR}/version)
+version=$(cat ${BLOB_DIR}/version)
 
-pushd ${REPO_ROOT:?required}
+pushd ${REPO_ROOT}
 
-cat <<EOF >config/private.yml
+blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
+if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
+  cat > config/private.yml <<YAML
 ---
 blobstore:
-  provider: s3
   options:
-    access_key_id: ${AWS_ACCESS_KEY:?required}
+    access_key_id: ${AWS_ACCESS_KEY}
     secret_access_key: ${AWS_SECRET_KEY:?required}
-EOF
+YAML
+fi
 
 blobs_to_remove=$(spruce json config/blobs.yml | jq -r "keys[] | select(test(\"${BLOB_CLEANUP}\"))")
 if [[ ! -z $blobs_to_remove ]]; then
   echo "$blobs_to_remove" | xargs -L1 bosh remove-blob
 fi
 
-# expand ${VERSION} env var into file path
+# expand ${version} env var into file path
 eval "blob_destination=${BLOB_DESTINATION}"
 bosh add-blob ../${BLOB_DIR}/${BLOB_BINARY} "${blob_destination}"
 bosh -n upload-blobs
@@ -51,23 +58,23 @@ popd
 if [[ -n "$(cd ${REPO_ROOT}; git status --porcelain)" ]]; then
   pushd ${REPO_ROOT}
   cat <<EOF >>ci/release_notes.md
-* Bumped ${BLOB_URL} to v${VERSION}
+* Bumped ${BLOB_URL} to v${version}
 EOF
   popd
 
   # GIT!
   if [[ -z $(git config --global user.email) ]]; then
-    git config --global user.email "ci@starkandwayne.com"
+    git config --global user.email "${GIT_EMAIL}"
   fi
   if [[ -z $(git config --global user.name) ]]; then
-    git config --global user.name "CI Bot"
+    git config --global user.name "${GIT_NAME}"
   fi
 
   (cd ${REPO_ROOT}
    git merge --no-edit ${BRANCH}
    git add -A
    git status
-   git commit -m "Bumped ${BLOB_NAME} to v${VERSION}")
+   git commit -m "Bumped ${BLOB_NAME} to v${version}")
 fi
 
 # so that future steps in the pipeline can push our changes
