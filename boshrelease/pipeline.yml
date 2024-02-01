@@ -78,7 +78,6 @@ groups:
     jobs:
       - testflight
       - testflight-pr
-      - pre
       - rc
       - shipit
   - name: versioning
@@ -201,13 +200,13 @@ jobs:
         icon_url: (( grab meta.slack.icon ))
         text_file: message/body
 
-  - name: pre
+  - name: rc
     public: true
     serial: true
     plan:
       - in_parallel:
           - { get: git,     trigger: true, passed: [ testflight ] }
-          - { get: version, trigger: true }
+          - { get: version, params: { pre: rc } }
           - { get: image }
       - task: release-notes
         image: image
@@ -233,21 +232,6 @@ jobs:
                 echo "hitting (+) on that shipit job..."
                 echo
               fi
-    on_failure:
-      put: notify
-      params:
-        channel:  (( grab meta.slack.channel ))
-        username: (( grab meta.slack.username ))
-        icon_url: (( grab meta.slack.icon ))
-        text:     (( grab meta.slack.fail_text ))
-
-  - name: rc
-    public: true
-    serial: true
-    plan:
-      - in_parallel:
-          - { get: git,     trigger: true, passed: [ pre ] }
-          - { get: version, params: { pre: rc } }
       - put: version
         params: { file: version/number }
     on_failure:

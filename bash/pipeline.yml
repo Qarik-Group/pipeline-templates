@@ -58,7 +58,6 @@ groups:
   - name: (( grab meta.pipeline ))
     jobs:
       - test
-      - pre
       - rc
       - shipit
       - bump-patch
@@ -95,13 +94,13 @@ jobs:
         icon_url: (( grab meta.slack.icon ))
         text:     (( grab meta.slack.fail_text ))
 
-  - name: pre
+  - name: rc
     public: true
     serial: true
     plan:
       - in_parallel:
           - { get: git,     trigger: true, passed: [ test ] }
-          - { get: version, trigger: true }
+          - { get: version, params: { pre: rc } }
           - { get: image }
       - task: release-notes
         image: image
@@ -127,22 +126,6 @@ jobs:
                 echo "hitting (+) on that shipit job..."
                 echo
               fi
-    on_failure:
-      put: notify
-      params:
-        channel:  (( grab meta.slack.channel ))
-        username: (( grab meta.slack.username ))
-        icon_url: (( grab meta.slack.icon ))
-        text:     (( grab meta.slack.fail_text ))
-
-  - name: rc
-    public: true
-    serial: true
-    plan:
-      - in_parallel:
-          - { get: git,     trigger: true, passed: [ pre ] }
-          - { get: image }
-          - { get: version, params: { pre: rc } }
       - put: version
         params: { file: version/number }
     on_failure:
