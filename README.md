@@ -8,10 +8,15 @@ pipeline, `ci/settings.yml` to override any parameters defined by the template, 
 from the pipeline, and a `ci/repipe` utility for putting all the
 pieces together into a functioning Concourse pipeline.
 
+This project was initially created by Stark & Wayne, and is now maintained by
+Gstack.
+
+## Setup
+
 Setup is straightforward:
 
 ```shell
-git clone https://github.com/starkandwayne/pipeline-templates
+git clone https://github.com/cloudfoundry-community/pipeline-templates
 cd pipeline-templates
 ./setup <template> ~/bosh/my-new-boshrelease
 ```
@@ -58,14 +63,14 @@ The `ci/repipe` script uses [Spruce](https://github.com/geofffranks/spruce) to m
 On MacOS/Homebrew:
 
 ```shell
-brew install starkandwayne/cf/spruce
+brew install cloudfoundry-community/cf/spruce
 ```
 
 On Debian/Ubuntu:
 
 ```shell
-wget -q -O - https://raw.githubusercontent.com/starkandwayne/homebrew-cf/master/public.key | apt-key add -
-echo "deb http://apt.starkandwayne.com stable main" | tee /etc/apt/sources.list.d/starkandwayne.list
+wget -q -O - https://raw.githubusercontent.com/cloudfoundry-community/homebrew-cf/master/public.key | apt-key add -
+echo "deb http://apt.community.cloudfoundry.org stable main" | tee /etc/apt/sources.list.d/cf-community.list
 apt-get update
 
 apt-get install spruce
@@ -181,9 +186,9 @@ For example, to populate the `(( vault "secret/pipelines/eden/slack:webhook" ))`
 safe set secret/pipelines/eden/slack webhook=https://hooks.slack.com/services/T2S1X7xxx/B6Y5A7xx/0nP7jxxx
 ```
 
-[docker-pipeline]:      https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/docker.png
-[boshrelease-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/boshrelease.png
-[genesis-kit-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/genesis-kit.png
-[go-pipeline]:          https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/go.png
-[buildpack-pipeline]:          https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/buildpack.png
-[helm-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/helm.png
+[docker-pipeline]:      https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/docker.png
+[boshrelease-pipeline]: https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/boshrelease.png
+[genesis-kit-pipeline]: https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/genesis-kit.png
+[go-pipeline]:          https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/go.png
+[buildpack-pipeline]:   https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/buildpack.png
+[helm-pipeline]:        https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/helm.png

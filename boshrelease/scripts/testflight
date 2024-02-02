@@ -14,10 +14,8 @@ set -eu
 : ${BOSH_CLIENT_SECRET:?required}
 : ${BOSH_DEPLOYMENT:?required}
 : ${MANIFEST_PATH:?required}
-: ${AWS_ACCESS_KEY:?required}
-: ${AWS_SECRET_KEY:?required}
 DEBUG=${DEBUG:-}
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 header() {
 	echo
@@ -71,7 +69,7 @@ if [[ ! -z ${op_patch_file_errors} ]]; then
 	exit 1
 fi
 
-$DIR/wait-until-proxy-bosh-cf-running
+${script_dir}/wait-until-proxy-bosh-cf-running
 if [[ "${PROXY_IP:-X}" != "X" ]] ; then export BOSH_ALL_PROXY=socks5://localhost:9999 ; fi
 
 delete_deployment
@@ -79,14 +77,17 @@ delete_deployment
 header "Creating candidate BOSH release..."
 bosh -n reset-release # in case dev_releases/ is in repo accidentally
 
-cat > config/private.yml <<YAML
+blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
+if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
+	cat > config/private.yml <<YAML
 ---
 blobstore:
-  provider: s3
   options:
     access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY}
+    secret_access_key: ${AWS_SECRET_KEY:?required}
 YAML
+fi
+
 bosh create-release
 bosh upload-release --rebase
 

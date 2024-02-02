@@ -16,7 +16,7 @@ meta:
   name:     (( param "Please name your pipeline" ))
   release:  (( grab meta.name ))
   target:   (( param "Please identify the name of the target Concourse CI" ))
-  url:      (( param "Please specify the full url of the target Concourse CI" ))
+  url:      (( param "Please specify the full URL of the target Concourse CI" ))
   pipeline: (( grab meta.name ))
 
   git:
@@ -62,47 +62,153 @@ meta:
     repository: (( param "Please specify the name of the image (repo/name) that you are building" ))
 
   slack:
-    webhook:         (( param "Please specify your Slack Incoming Webhook Integration URL" ))
-    channel:         (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
-    username:        concourse
-    icon:            https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
-    build_fail_msg: '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed to build " meta.name "!  Click for details.>" ))'
-    test_fail_msg:  '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed " meta.name " tests!  Click for details.>" ))'
+    webhook:      (( param "Please specify your Slack Incoming Webhook Integration URL" ))
+    channel:      (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
+    username:     concourse
+    icon:         https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
+    success_moji: ":airplane_departure:"
+    fail_moji:    ":airplane_arriving:"
+    upset_moji:   ":sadpanda:"
+    pipeline_url:  (( concat meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}" ))
+    fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
+    fail_text:    '(( concat meta.slack.fail_link " " meta.pipeline ": `${BUILD_JOB_NAME}` job failed" ))'
 
 groups:
   - name: (( grab meta.name ))
     jobs:
       - build
-      - promote
-      - minor
-      - major
+      - build-pr
       - test
+      - rc
+      - promote
+  - name: versioning
+    jobs:
+      - major
+      - minor
 
 jobs:
   - name: build
     public: true
     serial: true
     plan:
-      - get: source
-        trigger: true
+      - in_parallel:
+          - { get: source, trigger: true }
+          - { get: docker-image-build-task }
+
+      - task: build-docker-image
+        image: docker-image-build-task
+        privileged: true
+        config:
+          platform: linux
+          inputs:  [ { name: source, path: "." } ]
+          outputs: [ name: image ]
+          caches:  [ path: cache ]
+          run:     { path: build }
+        output_mapping:
+          image: built-image
+
       - put: edge
-        params: { build: source }
-        on_failure:
-          put: notify
+        inputs: [ built-image ]
+        params: { image: built-image/image.tar }
+
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
+
+  - name: build-pr
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: git-pull-requests, trigger: true, version: every }
+          - { get: tests }
+          - { get: docker-image-build-task }
+          - { get: image }
+
+      - put: git-pull-requests
+        params:
+          path: git-pull-requests
+          status: PENDING
+
+      - task: build-docker-image
+        image: docker-image-build-task
+        privileged: true
+        config:
+          platform: linux
+          inputs:  [ { name: git-pull-requests, path: "." } ]
+          outputs: [ name: image ]
+          caches:  [ path: cache ]
+          run:     { path: build }
+        output_mapping:
+          image: built-image
+        params:
+          UNPACK_ROOTFS: true
+        on_success:
+          put: git-pull-requests
           params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:     (( grab meta.slack.build_fail_msg ))
+            path: git-pull-requests
+            status: SUCCESS
+        on_failure:
+          put: git-pull-requests
+          params:
+            path: git-pull-requests
+            status: FAILURE
+
+      - task: test-image
+        image: built-image
+        config:
+          platform: linux
+          inputs:
+            - { name: git-pull-requests, path: source }
+            - { name: tests }
+          run:
+            path: (( grab meta.tests.cmd ))
+            args: (( grab meta.tests.args ))
+
+      - task: pr-success-message
+        image: image
+        config:
+          platform: linux
+          inputs:  [ name: git-pull-requests ]
+          outputs: [ name: message ]
+          run:
+            path: bash
+            args:
+            - -c
+            - |
+              set -ueo pipefail
+              pr_author=$(      < git-pull-requests/.git/resource/author)
+              pr_author_email=$(< git-pull-requests/.git/resource/author_email)
+              pr_title=$(       < git-pull-requests/.git/resource/title)
+              pr_url=$(         < git-pull-requests/.git/resource/url)
+              echo "Pull request “_<${pr_url}|${pr_title}>_”" \
+                "by *${pr_author:-${pr_author_email}}*" \
+                "has passed Docker build :tada:" \
+                "Merge when ready ${SUCCESS_MOJI}:"$'\n'"${pr_url}" \
+                > message/body
+          params:
+            SUCCESS_MOJI: (( grab meta.slack.success_moji ))
+
+    on_success:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text_file: message/body
 
   - name: test
     public: true
     serial: true
     plan:
       - in_parallel:
+          - { get: edge,    passed: [ build ], trigger: true }
+          - { get: source,  passed: [ build ] }
           - { get: tests }
-          - { get: edge,    passed: [build], trigger: true }
-          - { get: source,  passed: [build] }
       - task: test-image
         image: edge
         config:
@@ -113,34 +219,93 @@ jobs:
           run:
             path: (( grab meta.tests.cmd ))
             args: (( grab meta.tests.args ))
-        on_failure:
-          put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text:     (( grab meta.slack.test_fail_msg ))
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
+
+  - name: rc
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: edge,    trigger: true, passed: [ test ] }
+          - { get: source,  trigger: true, passed: [ test ] }
+          - { get: version, params: { pre: rc } }
+          - { get: image }
+      - task: release-notes
+        image: image
+        config:
+          platform: linux
+          inputs: [ name: source ]
+          run:
+            path: sh
+            args:
+            - -ce
+            - |
+              cd source
+              if [ -f ci/release_notes.md ]; then
+                echo "######   RELEASE NOTES   ###############"
+                echo
+                cat ci/release_notes.md
+                echo
+                echo "########################################"
+                echo
+              else
+                echo "NO RELEASE NOTES HAVE BEEN WRITTEN"
+                echo "You *might* want to do that before"
+                echo "hitting (+) on that shipit job..."
+                echo
+              fi
+      - put: version
+        params: { file: version/number }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: minor
     public: true
+    serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: minor} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: minor } }
+      - { put: version,                 params: { file: version/number } }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: major
     public: true
+    serial: true
     plan:
-      - { get: version, trigger: false, params: {bump: major} }
-      - { put: version,                 params: {file: version/number} }
+      - { get: version, trigger: false, params: { bump: major } }
+      - { put: version,                 params: { file: version/number } }
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
   - name: promote
     public: true
     serial: true
     plan:
       - in_parallel:
-          - { get: version }
-          - { get: edge,    passed: [test], params: { save: true } }
-          - { get: source,  passed: [test] }
+          - { get: version, passed: [ rc ], params: { bump: final } }
+          - { get: edge,    passed: [ rc ], params: { format: oci } }
+          - { get: source,  passed: [ rc ] }
           - { get: image }
 
       - task: release
@@ -153,6 +318,7 @@ jobs:
           outputs:
             - name: gh
             - name: pushme
+            - name: dockerhub
           run:
             path: ./source/ci/scripts/release
             args: []
@@ -165,15 +331,27 @@ jobs:
             GIT_EMAIL:    (( grab meta.git.email ))
             GIT_NAME:     (( grab meta.git.name ))
 
-      - put: latest # as 'latest'
+      - load_var: version
+        file: version/number
+      - put: latest
+        inputs: [ edge ]
         params:
-          load:       edge
-
-      - put: latest # as 'vX.Y.Z'
+          image:        edge/image.tar
+          version:      ((.:version))
+          bump_aliases: true
+      - task: update-dockerhub-readme
+        image: image
+        config:
+          platform: linux
+          inputs:
+            - name: source
+            - name: dockerhub
+          run:
+            path: ./git/ci/scripts/update-dockerhub-readme
         params:
-          tag:             version/number
-          tag_prefix:      v
-          load:       edge
+          DOCKERHUB_USERNAME:   (( grab meta.dockerhub.username ))
+          DOCKERHUB_PASSWORD:   (( grab meta.dockerhub.password ))
+          DOCKERHUB_REPOSITORY: (( grab meta.dockerhub.repository ))
 
       - put: version
         params:
@@ -187,16 +365,28 @@ jobs:
           name: gh/name
           tag:  gh/tag
           body: gh/notes.md
+    on_failure:
+      put: notify
+      params:
+        channel:  (( grab meta.slack.channel ))
+        username: (( grab meta.slack.username ))
+        icon_url: (( grab meta.slack.icon ))
+        text:     (( grab meta.slack.fail_text ))
 
 resource_types:
   - name: slack-notification
-    type: docker-image
+    type: registry-image
     source:
       repository: cfcommunity/slack-notification-resource
 
+  - name: pull-request
+    type: registry-image
+    source:
+      repository: teliaoss/github-pr-resource
+
 resources:
   - name: image
-    type: docker-image
+    type: registry-image
     source:
       repository: (( grab meta.image.name ))
       tag:        (( grab meta.image.tag ))
@@ -205,6 +395,7 @@ resources:
 
   - name: source
     type: git
+    icon: github
     source:
       uri:         (( grab meta.source.github.uri ))
       branch:      (( grab meta.source.github.branch ))
@@ -212,25 +403,47 @@ resources:
 
   - name: tests
     type: git
+    icon: github
     source:
       uri:         (( grab meta.tests.github.uri ))
       branch:      (( grab meta.tests.github.branch ))
       private_key: (( grab meta.tests.github.private_key ))
 
-  - name: edge
-    type: docker-image
+  - name: git-pull-requests
+    type: pull-request
+    icon: github
     source:
-      .: (( inject meta.dockerhub ))
+      access_token: (( grab meta.github.access_token ))
+      repository:   (( concat meta.github.owner "/" meta.github.repo ))
+      base_branch:  (( grab meta.github.branch ))
+
+  - name: docker-image-build-task
+    type: registry-image
+    icon: docker
+    source:
+      repository: concourse/oci-build-task
+
+  - name: edge
+    type: registry-image
+    icon: docker
+    source:
+      username:   (( grab meta.dockerhub.username ))
+      password:   (( grab meta.dockerhub.password ))
+      repository: (( grab meta.dockerhub.repository ))
       tag: edge
 
   - name: latest
-    type: docker-image
+    type: registry-image
+    icon: docker
     source:
-      .: (( inject meta.dockerhub ))
+      username:   (( grab meta.dockerhub.username ))
+      password:   (( grab meta.dockerhub.password ))
+      repository: (( grab meta.dockerhub.repository ))
       tag: latest
 
   - name: version
     type: semver
+    icon: aws
     source:
       driver:            s3
       bucket:            (( grab meta.aws.bucket ))
@@ -242,11 +455,13 @@ resources:
 
   - name: notify
     type: slack-notification
+    icon: slack
     source:
       url: (( grab meta.slack.webhook ))
 
   - name: github
     type: github-release
+    icon: github
     source:
       user:         (( grab meta.source.github.owner ))
       repository:   (( grab meta.source.github.repo ))

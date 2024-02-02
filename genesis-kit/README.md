@@ -58,7 +58,7 @@ If the field name is empty, the field `value` is assumed.
 The `ci/scripts` directory contains the scripts that are used by the tasks.
 They reside in a single common scripts file, rather than split out by tasks,
 because they are often shared among multiple tasks, so this promotes
-reusability.  
+reusability.
 
 While most are bash scripts, there are perl scripts too.  Please restrict your
 scripts to these two languages because they are common to all platforms that
@@ -397,10 +397,10 @@ The `iaas` is the same value as specified in `meta.iaas` in the
 
 The `purpose` is what the test is testing.  Convention has the nominal
 deployment envionment purpose called `baseline`, and there is also `upgrade`,
-but it can anything. 
+but it can anything.
 
 The deployment name is specified in the deployment jobs as the param value
-`DEPLOY_ENV` 
+`DEPLOY_ENV`
 
 #### Other Considerations
 
@@ -411,5 +411,4 @@ file)
 
 There are definitely many places this can be further modified, but try to keep
 to the template as much as possible.  If you can't, see if it can be
-generalized and backported to the main template. 
-
+generalized and backported to the main template.

@@ -25,8 +25,6 @@ header() {
 : ${BRANCH:?required}
 : ${GITHUB_OWNER:?required}
 : ${VERSION_FROM:?required}
-: ${AWS_ACCESS_KEY:?required}
-: ${AWS_SECRET_KEY:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
 
@@ -34,8 +32,8 @@ if [[ ! -f ${VERSION_FROM} ]]; then
   echo >&2 "Version file (${VERSION_FROM}) not found.  Did you misconfigure Concourse?"
   exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[ -z ${VERSION} ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z ${version} ]]; then
   echo >&2 "Version file (${VERSION_FROM}) was empty.  Did you misconfigure Concourse?"
   exit 2
 fi
@@ -45,43 +43,45 @@ if [[ ! -f ${REPO_ROOT}/ci/release_notes.md ]]; then
   exit 1
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ###############################################################
 
 git clone ${REPO_ROOT} ${REPO_OUT}
 
 pushd ${REPO_OUT}
-RELEASE_NAME=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
-  || RELEASE_NAME=$(bosh int config/final.yml --path /name)
+release_name=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
+  || release_name=$(bosh int config/final.yml --path /name)
 
-cat > config/private.yml <<YAML
+blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
+if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
+  cat > config/private.yml <<YAML
 ---
 blobstore:
-  provider: s3
   options:
     access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY}
+    secret_access_key: ${AWS_SECRET_KEY:?required}
 YAML
+fi
 
 header "Pulling in any git submodules..."
 git submodule update --init --recursive --force
 
 header "Create final release..."
-bosh -n create-release --final --version "${VERSION}"
-bosh -n create-release releases/$RELEASE_NAME/$RELEASE_NAME-$VERSION.yml \
-              --tarball releases/$RELEASE_NAME/$RELEASE_NAME-$VERSION.tgz
+bosh -n create-release --final --version "${version}"
+bosh -n create-release releases/${release_name}/${release_name}-${version}.yml \
+              --tarball releases/${release_name}/${release_name}-${version}.tgz
 popd
 
-RELEASE_TGZ=$REPO_OUT/releases/$RELEASE_NAME/$RELEASE_NAME-$VERSION.tgz
-export RELEASE_SHA1=$(sha1sum $RELEASE_TGZ | head -n1 | awk '{print $1}')
-export RELEASE_URL="https://github.com/${GITHUB_OWNER}/${RELEASE_NAME}-boshrelease/releases/download/v${VERSION}/${RELEASE_NAME}-${VERSION}.tgz"
-echo "RELEASE_SHA1=$RELEASE_SHA1"
+release_tgz=${REPO_OUT}/releases/${release_name}/${release_name}-${version}.tgz
+export release_sha1=$(sha1sum $release_tgz | head -n1 | awk '{print $1}')
+export release_url="https://github.com/${GITHUB_OWNER}/${release_name}-boshrelease/releases/download/v${version}/${release_name}-${version}.tgz"
+echo "RELEASE_SHA1=${release_sha1}"
 
 mkdir -p ${RELEASE_ROOT}/artifacts
-echo "v${VERSION}"                         > ${RELEASE_ROOT}/tag
-echo "${GH_RELEASE_NAME} v${VERSION}"      > ${RELEASE_ROOT}/name
-mv ${REPO_OUT}/releases/*/*-${VERSION}.tgz   ${RELEASE_ROOT}/artifacts
+echo "v${version}"                         > ${RELEASE_ROOT}/tag
+echo "${GH_RELEASE_NAME} v${version}"      > ${RELEASE_ROOT}/name
+mv ${REPO_OUT}/releases/*/*-${version}.tgz   ${RELEASE_ROOT}/artifacts
 mv ${REPO_OUT}/ci/release_notes.md           ${RELEASE_ROOT}/notes.md
 cat >> ${RELEASE_ROOT}/notes.md <<EOF
 
@@ -89,14 +89,14 @@ cat >> ${RELEASE_ROOT}/notes.md <<EOF
 
 \`\`\`yaml
 releases:
-- name:    $RELEASE_NAME
-  version: $VERSION
-  url:     $RELEASE_URL
-  sha1:    $RELEASE_SHA1
+- name:    ${release_name}
+  version: ${version}
+  url:     ${release_url}
+  sha1:    ${release_sha1}
 \`\`\`
 EOF
 cat > ${RELEASE_ROOT}/notification <<EOF
-<!here> New ${RELEASE_NAME} v${VERSION} released!
+<!here> New ${release_name} v${version} released!
 EOF
 
 
@@ -108,15 +108,15 @@ if [[ -z $(git config --global user.name) ]]; then
   git config --global user.name "${GIT_NAME}"
 fi
 
-pushd $REPO_OUT
-$DIR/update-manifest-release $RELEASE_NAME $VERSION $RELEASE_URL $RELEASE_SHA1
+pushd ${REPO_OUT}
+${script_dir}/update-manifest-release ${release_name} ${version} ${release_url} ${release_sha1}
 
 git merge --no-edit ${BRANCH}
 git add -A
 git status
-git commit -m "release v${VERSION}"
+git commit -m "release v${version}"
 popd
 
 cat > ${NOTIFICATION_OUT:-notifications}/message <<EOS
-New ${RELEASE_NAME} v${VERSION} released. <https://github.com/${GITHUB_OWNER}/${RELEASE_NAME}-boshrelease/releases/tag/v${VERSION}|Release notes>.
+New ${release_name} v${version} released. <https://github.com/${GITHUB_OWNER}/${release_name}-boshrelease/releases/tag/v${version}|Release notes>.
 EOS

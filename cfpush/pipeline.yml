@@ -52,8 +52,8 @@ jobs:
         image: image
         config:
           platform: linux
-          inputs: [{name: app}]
-          outputs: [{name: app-with-setup}]
+          inputs:  [ name: app ]
+          outputs: [ name: app-with-setup ]
           run:
             path: app/ci/scripts/setup-app.sh
       - put: cf-push-staging
@@ -68,13 +68,13 @@ jobs:
     plan:
       - in_parallel:
           - { get: app, trigger: false, passed: [ deploy-staging ] }
-          - { get: image }
+          - { get: image,               passed: [ deploy-staging ] }
       - task: setup-app
         image: image
         config:
           platform: linux
-          inputs: [{name: app}]
-          outputs: [{name: app-with-setup}]
+          inputs:  [ name: app ]
+          outputs: [ name: app-with-setup ]
           run:
             path: app/ci/scripts/setup-app.sh
       - put: cf-push-production
@@ -84,9 +84,17 @@ jobs:
           current_app_name: (( grab meta.cf.appname ))
           show_app_log: true
 
+resource_types:
+  - name: cf-resource-with-tail
+    type: registry-image
+    source:
+      repository: govau/cf-resource
+      tag: master
+
 resources:
   - name: image
-    type: docker-image
+    type: registry-image
+    icon: docker
     source:
       repository: (( grab meta.image.name ))
       tag:        (( grab meta.image.tag ))
@@ -95,6 +103,7 @@ resources:
 
   - name: app
     type: git
+    icon: github
     source:
       uri:         (( grab meta.github.uri ))
       branch:      (( grab meta.github.branch_master ))
@@ -119,11 +128,3 @@ resources:
       password:        (( grab meta.cf.password ))
       organization:    (( grab meta.cf.organization ))
       space:           (( grab meta.cf.spaces.production ))
-
-resource_types:
-- name: cf-resource-with-tail
-  type: docker-image
-  source:
-    repository: govau/cf-resource
-    tag: master
-
