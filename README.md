@@ -8,6 +8,11 @@ pipeline, `ci/settings.yml` to override any parameters defined by the template, 
 from the pipeline, and a `ci/repipe` utility for putting all the
 pieces together into a functioning Concourse pipeline.
 
+This project was initially created by Stark & Wayne, and is now maintained by
+Gstack.
+
+## Setup
+
 Setup is straightforward:
 
 ```shell
