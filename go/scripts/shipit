@@ -49,7 +49,6 @@ go version; echo; echo
 TARGETS=${TARGETS:-linux/amd64 darwin/amd64}
 ROOT=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )
 
-pushd $REPO_ROOT
 newgopath=${ROOT%%/gopath/*}/gopath
 if [[ -d ${newgopath} ]]; then
 	if [[ -z ${GOPATH} ]]; then
@@ -60,8 +59,7 @@ if [[ -d ${newgopath} ]]; then
 	PATH="${PATH}:${newgopath}/bin"
 fi
 echo ">> Using GOPATH ${GOPATH}"
-go get github.com/mitchellh/gox
-popd
+go install github.com/mitchellh/gox@latest
 
 if [[ -n ${STATIC_BINARY} && ${STATIC_BINARY} != "false" ]]; then
 	export CGO_ENABLED=0
