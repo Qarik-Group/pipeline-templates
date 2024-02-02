@@ -12,6 +12,14 @@
 
 set -eu
 
+: ${BINARY:?required}
+: ${REPO_ROOT:?required}
+: ${RELEASE_NAME:?required}
+: ${RELEASE_ROOT:?required}
+: ${REPO_OUT:?required}
+: ${BRANCH:?required}
+: ${GITHUB_OWNER:?required}
+: ${GITHUB_REPO:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
 
