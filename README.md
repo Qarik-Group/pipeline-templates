@@ -143,7 +143,12 @@ You will create and maintain `ci/settings.yml` for this.
 
 Try very very hard to not modify `ci/pipeline.yml`. Instead, use `./setup` to update `ci/pipeline.yml` with new changes from this repo. If you do need to modify `ci/pipeline.yml` please feel welcome to submit PRs to this repo so that we can merge them and share them with everyone.
 
-At Stark & Wayne we store our credentials for pipelines in Vault. We use the spruce syntax `(( vault "path1" ))` to dynamically fetch these values during `ci/repipe`. Recently Concourse CI has added native support for Vault, so we will investigate this in the future. Or you could try to use it and let us know how it goes!
+For those who use Vault to store their credentials, the spruce syntax
+`(( vault "path1" ))` can fetch the secret values during `ci/repipe`. Using
+this feature is not recommended though, because the secrets will leak as
+clear-text in the Concourse (Postgres) database. Since Concourse CI has native
+support for Vault, everyone should use that so that secrets are fetched
+just-in-time, and have lower risk of leaking.
 
 Here is an example [`ci/settings.yml`](https://github.com/starkandwayne/eden/blob/master/ci/settings.yml) from the `eden` CLI project (uses the `go` template):
 
