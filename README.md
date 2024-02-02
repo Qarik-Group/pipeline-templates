@@ -181,9 +181,9 @@ For example, to populate the `(( vault "secret/pipelines/eden/slack:webhook" ))`
 safe set secret/pipelines/eden/slack webhook=https://hooks.slack.com/services/T2S1X7xxx/B6Y5A7xx/0nP7jxxx
 ```
 
-[docker-pipeline]:      https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/docker.png
-[boshrelease-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/boshrelease.png
-[genesis-kit-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/genesis-kit.png
-[go-pipeline]:          https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/go.png
-[buildpack-pipeline]:          https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/buildpack.png
-[helm-pipeline]: https://raw.githubusercontent.com/starkandwayne/pipeline-templates/master/screenshots/helm.png
+[docker-pipeline]:      https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/docker.png
+[boshrelease-pipeline]: https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/boshrelease.png
+[genesis-kit-pipeline]: https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/genesis-kit.png
+[go-pipeline]:          https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/go.png
+[buildpack-pipeline]:   https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/buildpack.png
+[helm-pipeline]:        https://raw.githubusercontent.com/cloudfoundry-community/pipeline-templates/master/screenshots/helm.png
