@@ -22,9 +22,9 @@ meta:
     secret_key:  ((aws-secret-key))
 
   github:
-    owner:  $(basename $(dirname $PWD))
-    repo:   $(basename $PWD)
-    branch: $(git branch --no-color | awk '{print $2}')
+    owner:        $(basename $(dirname $PWD))
+    repo:         $(basename $PWD)
+    branch:       $(git branch --no-color | awk '/^\*/{print $2}')
     private_key:  ((github-private-key))
     access_token: ((github-access-token))
 
