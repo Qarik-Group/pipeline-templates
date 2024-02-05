@@ -42,12 +42,13 @@ meta:
     secret_key: (( param "Please set your AWS Secret Key ID for your pipeline S3 Bucket" ))
 
   github:
-    uri:          (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
-    owner:        (( param "Please specify the name of the user / organization that owns the Github repository" ))
-    repo:         (( param "Please specify the name of the Github repository" ))
-    branch:       master
-    private_key:  (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
-    access_token: (( param "Please generate a Personal Access Token to be used for creating github releases (do you have a ci-bot?)" ))
+    uri:            (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
+    owner:          (( param "Please specify the name of the user / organization that owns the Github repository" ))
+    repo:           (( param "Please specify the name of the Github repository" ))
+    branch:         master
+    pr_base_branch: (( grab meta.github.branch ))
+    private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
+    access_token:   (( param "Please generate a Personal Access Token to be used for creating github releases (do you have a ci-bot?)" ))
 
   bosh:
     stemcell:
@@ -479,7 +480,7 @@ resources:
     source:
       access_token: (( grab meta.github.access_token ))
       repository:   (( concat meta.github.owner "/" meta.github.repo ))
-      base_branch:  (( grab meta.github.branch ))
+      base_branch:  (( grab meta.github.pr_base_branch ))
 
   - name: version
     type: semver
