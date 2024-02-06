@@ -219,7 +219,7 @@ jobs:
             - name: pushme
             - name: notifications
           run:
-            path: ./git/ci/scripts/shipit.sh
+            path: ./git/ci/scripts/shipit
             args: []
           params:
             RELEASE_NAME:   (( grab meta.release ))

@@ -55,7 +55,7 @@ jobs:
           inputs:  [ name: app ]
           outputs: [ name: app-with-setup ]
           run:
-            path: app/ci/scripts/setup-app.sh
+            path: app/ci/scripts/setup-app
       - put: cf-push-staging
         params:
           manifest: (( concat "app-with-setup/" meta.cf.manifests.staging ))
@@ -76,7 +76,7 @@ jobs:
           inputs:  [ name: app ]
           outputs: [ name: app-with-setup ]
           run:
-            path: app/ci/scripts/setup-app.sh
+            path: app/ci/scripts/setup-app
       - put: cf-push-production
         params:
           manifest: (( concat "app-with-setup/" meta.cf.manifests.production ))
