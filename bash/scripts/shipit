@@ -24,6 +24,9 @@ auto_sed() {
 
 set -eu
 
+: ${GIT_EMAIL:?required}
+: ${GIT_NAME:?required}
+
 if [[ -z ${VERSION_FROM} ]]; then
   echo >&2 "VERSION_FROM environment variable not set, or empty.  Did you misconfigure Concourse?"
   exit 2
@@ -75,10 +78,10 @@ EOF
 
 # GIT!
 if [[ -z $(git config --global user.email) ]]; then
-  git config --global user.email "ci@starkandwayne.com"
+  git config --global user.email "${GIT_EMAIL}"
 fi
 if [[ -z $(git config --global user.name) ]]; then
-  git config --global user.name "CI Bot"
+  git config --global user.name "${GIT_NAME}"
 fi
 
 (cd ${REPO_ROOT}

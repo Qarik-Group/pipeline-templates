@@ -18,6 +18,10 @@ meta:
   url:      (( param "Please specify the full URL of the target Concourse CI" ))
   pipeline: (( grab meta.name ))
 
+  git:
+    email:  (( param "Please provide the git email for automated commits" ))
+    name:   (( param "Please provide the git name for automated commits" ))
+
   image:
     name: starkandwayne/concourse
     tag: latest
@@ -208,6 +212,8 @@ jobs:
             RELEASE_ROOT: gh
             REPO_OUT:     pushme
             BRANCH:       (( grab meta.github.branch ))
+            GIT_EMAIL:      (( grab meta.git.email ))
+            GIT_NAME:       (( grab meta.git.name ))
       - put: version
         params: { bump: final }
       - put: git
