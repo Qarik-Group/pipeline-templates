@@ -331,7 +331,7 @@ resource_types:
   - name: pull-request
     type: registry-image
     source:
-      repository: teliaoss/github-pr-resource
+      repository: cfcommunity/github-pr-resource
 
 resources:
   - name: image
