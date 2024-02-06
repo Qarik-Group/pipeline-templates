@@ -42,12 +42,13 @@ meta:
     secret_key: (( param "Please set your AWS Secret Key ID for your pipeline S3 Bucket" ))
 
   github:
-    uri:          (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
-    owner:        (( param "Please specify the name of the user / organization that owns the Github repository" ))
-    repo:         (( grab meta.pipeline ))
-    branch:       master
-    private_key:  (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
-    access_token: (( param "Please generate a Personal Access Token to be used for creating github releases (do you have a ci-bot?)" ))
+    uri:            (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
+    owner:          (( param "Please specify the name of the user / organization that owns the Github repository" ))
+    repo:           (( grab meta.pipeline ))
+    branch:         master
+    release_branch: (( grab meta.github.branch ))
+    private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
+    access_token:   (( param "Please generate a Personal Access Token to be used for creating github releases (do you have a ci-bot?)" ))
 
   slack:
     webhook:      (( param "Please specify your Slack Incoming Webhook Integration URL" ))
@@ -225,7 +226,7 @@ jobs:
             VERSION_FROM:   version/number
             RELEASE_OUT:    gh
             REPO_OUT:       pushme
-            REPO_BRANCH:    (( grab meta.github.branch ))
+            RELEASE_BRANCH: (( grab meta.github.release_branch ))
             REPO_URL:       (( concat "https://github.com/" meta.github.owner "/" meta.github.repo ))
             NOTIFICATION_OUT: notifications
             GIT_EMAIL:      (( grab meta.git.email ))

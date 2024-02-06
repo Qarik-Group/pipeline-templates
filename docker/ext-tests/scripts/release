@@ -16,6 +16,7 @@ set -eu
 : ${RELEASE_NAME:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
+RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${REPO_OUT:?required}
 
 if [[ ! -f ${REPO_ROOT}/ci/release_notes.md ]]; then
@@ -50,7 +51,7 @@ if [[ -z $(git config --global user.name) ]]; then
 fi
 
 (cd ${REPO_ROOT}
- git merge --no-edit master
+ git merge --no-edit "${RELEASE_BRANCH}"
  git add -A
  git status
  git commit -m "release v${VERSION} [skip ci]")

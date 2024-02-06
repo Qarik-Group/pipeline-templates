@@ -48,6 +48,7 @@ meta:
     repo:           (( param "Please specify the name of the Github repository" ))
     branch:         master
     pr_base_branch: (( grab meta.github.branch ))
+    release_branch: (( grab meta.github.branch ))
     private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
     access_token:   (( param "Please generate a Personal Access Token and specify it here" ))
 
@@ -280,20 +281,20 @@ jobs:
             path: (( concat "./gopath/src/" meta.go.module "/ci/scripts/shipit" ))
             args: []
           params:
-            BINARY:       (( grab meta.go.binary ))
-            REPO_ROOT:    (( concat "gopath/src/" meta.go.module ))
-            VERSION_FROM: version/number
-            RELEASE_NAME: (( grab meta.release ))
-            RELEASE_ROOT: gh
-            REPO_OUT:     pushme
+            BINARY:           (( grab meta.go.binary ))
+            REPO_ROOT:        (( concat "gopath/src/" meta.go.module ))
+            VERSION_FROM:     version/number
+            RELEASE_NAME:     (( grab meta.release ))
+            RELEASE_ROOT:     gh
+            REPO_OUT:         pushme
             NOTIFICATION_OUT: notifications
-            BRANCH:       (( grab meta.github.branch ))
-            GITHUB_OWNER: (( grab meta.github.owner ))
-            GITHUB_REPO: (( grab meta.github.repo ))
-            CMD_PKG:      (( grab meta.go.cmd_module ))
-            STATIC_BINARY:  (( grab meta.go.force_static_binary ))
-            GIT_EMAIL:      (( grab meta.git.email ))
-            GIT_NAME:       (( grab meta.git.name ))
+            RELEASE_BRANCH:   (( grab meta.github.release_branch ))
+            GITHUB_OWNER:     (( grab meta.github.owner ))
+            GITHUB_REPO:      (( grab meta.github.repo ))
+            CMD_PKG:          (( grab meta.go.cmd_module ))
+            STATIC_BINARY:    (( grab meta.go.force_static_binary ))
+            GIT_EMAIL:        (( grab meta.git.email ))
+            GIT_NAME:         (( grab meta.git.name ))
       - put: version
         params: { bump: final }
       - put: git

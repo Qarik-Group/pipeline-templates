@@ -25,7 +25,7 @@ header() {
 : ${VERSION_FROM:?required}
 : ${RELEASE_ROOT:?required}
 : ${REPO_OUT:?required}
-: ${BRANCH:?required}
+RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${GITHUB_OWNER:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
@@ -104,7 +104,7 @@ echo "v${VERSION}"                 > ${RELEASE_ROOT}/name
 mv ${REPO_OUT}/ci/release_notes.md   ${RELEASE_ROOT}/notes.md
 
 pushd $REPO_OUT
-git merge --no-edit ${BRANCH}
+git merge --no-edit "${RELEASE_BRANCH}"
 git add -A
 git status
 git commit -m "release v${VERSION}"

@@ -13,7 +13,7 @@
 : ${RELEASE_OUT:?required}
 : ${REPO_OUT:?required}
 : ${NOTIFICATION_OUT:?required}
-: ${REPO_BRANCH:?required}
+RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${REPO_URL:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
@@ -70,7 +70,7 @@ fi
 
 (cd ${REPO_OUT}
  echo "${VERSION}" > VERSION
- git merge --no-edit ${REPO_BRANCH}
+ git merge --no-edit ${RELEASE_BRANCH}
  git add -A
  git status
  git commit -m "release v${VERSION}")

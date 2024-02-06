@@ -47,6 +47,7 @@ meta:
     repo:           (( param "Please specify the name of the Github repository" ))
     branch:         master
     pr_base_branch: (( grab meta.github.branch ))
+    release_branch: (( grab meta.github.branch ))
     private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
     access_token:   (( param "Please generate a Personal Access Token to be used for creating github releases (do you have a ci-bot?)" ))
 
@@ -314,7 +315,7 @@ jobs:
             GH_RELEASE_NAME:  (( grab meta.release ))
             REPO_OUT:         pushme
             NOTIFICATION_OUT: notifications
-            BRANCH:           (( grab meta.github.branch ))
+            RELEASE_BRANCH:   (( grab meta.github.release_branch ))
             GITHUB_OWNER:     (( grab meta.github.owner ))
             GIT_EMAIL:        (( grab meta.git.email ))
             GIT_NAME:         (( grab meta.git.name ))

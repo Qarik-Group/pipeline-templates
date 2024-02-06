@@ -43,6 +43,7 @@ meta:
       repo:           (( param "Please specify the name of the Github repository for the source" ))
       branch:         master
       pr_base_branch: (( grab meta.source.github.branch ))
+      release_branch: (( grab meta.source.github.branch ))
       private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
       access_token:   (( param "Please generate a Personal Access Token and specify it here" ))
 
@@ -324,13 +325,14 @@ jobs:
             path: ./source/ci/scripts/release
             args: []
           params:
-            REPO_ROOT:    source
-            RELEASE_ROOT: gh
-            RELEASE_NAME: (( grab meta.release ))
-            REPO_OUT:     pushme/source
-            VERSION_FROM: version/number
-            GIT_EMAIL:    (( grab meta.git.email ))
-            GIT_NAME:     (( grab meta.git.name ))
+            REPO_ROOT:      source
+            RELEASE_ROOT:   gh
+            RELEASE_NAME:   (( grab meta.release ))
+            REPO_OUT:       pushme/source
+            VERSION_FROM:   version/number
+            GIT_EMAIL:      (( grab meta.git.email ))
+            GIT_NAME:       (( grab meta.git.name ))
+            RELEASE_BRANCH: (( grab meta.github.release_branch ))
 
       - load_var: version
         file: version/number

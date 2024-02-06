@@ -29,6 +29,7 @@ set -eu
 : ${RELEASE_NAME:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
+RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${REPO_OUT:?required}
 
 if [[ -z ${VERSION_FROM} ]]; then
@@ -90,7 +91,7 @@ fi
 
 (cd ${REPO_ROOT}
  git stash
- git merge --no-edit ${BRANCH}
+ git merge --no-edit "${RELEASE_BRANCH}"
  git stash pop
  git add -A
  git status

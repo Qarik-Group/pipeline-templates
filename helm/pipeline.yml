@@ -40,12 +40,13 @@ meta:
     charts_uri: (( param "Please set your s3://bucket-name/charts URI" ))
 
   github:
-    uri:          (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
-    owner:        (( param "Please specify the name of the user / organization that owns the Github repository" ))
-    repo:         (( param "Please specify the name of the Github repository" ))
-    branch:       master
-    private_key:  (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
-    access_token: (( param "Please generate a Personal Access Token and specify it here" ))
+    uri:            (( concat "git@github.com:" meta.github.owner "/" meta.github.repo ))
+    owner:          (( param "Please specify the name of the user / organization that owns the Github repository" ))
+    repo:           (( param "Please specify the name of the Github repository" ))
+    branch:         master
+    release_branch: (( grab meta.github.branch ))
+    private_key:    (( param "Please generate an SSH Deployment Key for this repo and specify it here" ))
+    access_token:   (( param "Please generate a Personal Access Token and specify it here" ))
 
   dockerhub:
     username:   (( param "Please specify the username for your Dockerhub account" ))
@@ -140,17 +141,17 @@ jobs:
                 path: ./git/ci/scripts/shipit
                 args: []
               params:
-                CHART_NAME:   (( grab meta.name ))
-                CHART_ROOT:   (( grab meta.helm.chart_path ))
-                REPO_ROOT:    git
-                VERSION_FROM: version/number
-                RELEASE_ROOT: gh
-                REPO_OUT:     (( grab meta.name ))
-                BRANCH:       (( grab meta.github.branch ))
-                GITHUB_OWNER: (( grab meta.github.owner ))
-                GIT_EMAIL:      (( grab meta.git.email ))
-                GIT_NAME:       (( grab meta.git.name ))
-                NOTIFICATION_OUT: notifications
+                CHART_NAME:            (( grab meta.name ))
+                CHART_ROOT:            (( grab meta.helm.chart_path ))
+                REPO_ROOT:             git
+                VERSION_FROM:          version/number
+                RELEASE_ROOT:          gh
+                REPO_OUT:              (( grab meta.name ))
+                RELEASE_BRANCH:        (( grab meta.github.release_branch ))
+                GITHUB_OWNER:          (( grab meta.github.owner ))
+                GIT_EMAIL:             (( grab meta.git.email ))
+                GIT_NAME:              (( grab meta.git.name ))
+                NOTIFICATION_OUT:      notifications
                 AWS_ACCESS_KEY_ID:     (( grab meta.aws.access_key ))
                 AWS_SECRET_ACCESS_KEY: (( grab meta.aws.secret_key ))
                 AWS_DEFAULT_REGION:    (( grab meta.aws.region_name ))
