@@ -23,7 +23,7 @@ meta:
 
   image:
     name: starkandwayne/concourse-go
-    tag: 1.12
+    tag: latest
     registry:
       username: (( param "Please set your Docker registry username for your pipeline image" ))
       password: (( param "Please set your Docker registry password for your pipeline image" ))

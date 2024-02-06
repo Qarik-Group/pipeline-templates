@@ -51,8 +51,8 @@ meta:
     channel:      (( param "Please specify the channel (#name) or user (@user) to send messages to" ))
     username:     concourse
     icon:         https://cl.ly/2F421Y300u07/concourse-logo-blue-transparent.png
-    fail_moji:    ":airplane_arriving:"
     success_moji: ":airplane_departure:"
+    fail_moji:    ":airplane_arriving:"
     upset_moji:   ":sadpanda:"
     pipeline_url:  (( concat meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}" ))
     fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
