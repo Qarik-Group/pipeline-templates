@@ -24,8 +24,12 @@ auto_sed() {
 
 set -eu
 
+: ${REPO_ROOT:?required}
+: ${BIN_DIR:?required}
+: ${RELEASE_NAME:?required}
 : ${GIT_EMAIL:?required}
 : ${GIT_NAME:?required}
+: ${REPO_OUT:?required}
 
 if [[ -z ${VERSION_FROM} ]]; then
   echo >&2 "VERSION_FROM environment variable not set, or empty.  Did you misconfigure Concourse?"
