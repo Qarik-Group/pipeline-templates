@@ -1,0 +1,38 @@
+---
+meta:
+  name:    $(basename $PWD)
+  target:  ${fly_target}
+  url:     ${fly_target_url}
+
+  initial_version: 1.0.0
+
+  manifest:
+    directory: manifests
+
+  git:
+    email:  ((git-commit-email))
+    name:   ((git-commit-name))
+
+  image:
+    registry:
+      username: ((docker_registry_username))
+      password: ((docker-registry-password))
+
+  aws:
+    bucket:      (( grab meta.pipeline ))
+    region_name: us-east-1
+    access_key:  ((aws-access-key))
+    secret_key:  ((aws-secret-key))
+
+  github:
+    owner:        $(basename $(dirname $PWD))
+    repo:         (( grab meta.pipeline ))
+    branch:       $(git branch --no-color | awk '/^\*/{print $2}')
+    private_key:  ((github-private-key))
+    access_token: ((github-access-token))
+
+  slack:
+    webhook:       ((slack-webhook))
+    username:      ((slack-username))
+    icon:          ((slack-icon-url))
+    channel:       "#$(basename $PWD)"
