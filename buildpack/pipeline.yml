@@ -13,6 +13,7 @@
 
 meta:
   name:     (( param "Please name your pipeline" ))
+  release:  (( grab meta.name ))
   pipeline: (( concat meta.name "-buildpack" ))
   target:   (( param "Please identify the name of the target Concourse CI" ))
   url:      (( param "Please specify the full URL of the target Concourse CI" ))
@@ -221,7 +222,7 @@ jobs:
             path: ./git/ci/scripts/shipit.sh
             args: []
           params:
-            RELEASE_NAME:   (( grab meta.pipeline ))
+            RELEASE_NAME:   (( grab meta.release ))
             REPO_ROOT:      git
             VERSION_FROM:   version/number
             RELEASE_OUT:    gh
