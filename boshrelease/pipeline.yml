@@ -55,7 +55,7 @@ meta:
     stemcell:
       major: 1
       cpi: aws-xen-hvm
-      os: ubuntu-bionic
+      os: ubuntu-jammy
     target:        ((bosh-lite-environment))
     cacert:        ((bosh-lite-ca-cert))
     username:      ((bosh-lite-client))
