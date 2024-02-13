@@ -32,6 +32,10 @@ version=$(cat ${BLOB_DIR}/version)
 
 pushd ${REPO_ROOT}
 
+if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
+  git lfs install
+fi
+
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
 if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
   cat > config/private.yml <<YAML

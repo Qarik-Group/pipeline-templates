@@ -50,6 +50,11 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 git clone ${REPO_ROOT} ${REPO_OUT}
 
 pushd ${REPO_OUT}
+
+if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
+  git lfs install
+fi
+
 release_name=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
   || release_name=$(bosh int config/final.yml --path /name)
 

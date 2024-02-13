@@ -10,6 +10,12 @@ set -eu
 
 git clone ${REPO_ROOT} ${REPO_OUT}
 
+pushd ${REPO_OUT}
+  if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
+    git lfs install
+  fi
+popd
+
 if [[ -z $(git config --global user.email) ]]; then
   git config --global user.email "${GIT_EMAIL}"
 fi

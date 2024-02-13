@@ -33,6 +33,11 @@ trap "echo; echo; echo; sleep 10; delete_deployment" EXIT SIGINT SIGTERM
 
 
 cd ${REPO_ROOT:?required}
+
+if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
+  git lfs install
+fi
+
 header "Pulling in any git submodules..."
 git submodule update --init --recursive --force
 
