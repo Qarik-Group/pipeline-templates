@@ -14,6 +14,7 @@ set -eu
 : ${BOSH_CLIENT_SECRET:?required}
 : ${BOSH_DEPLOYMENT:?required}
 : ${MANIFEST_PATH:?required}
+IGNORE_GIT_DIRTY_STATE=${IGNORE_GIT_DIRTY_STATE:-""}
 DEBUG=${DEBUG:-}
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -92,8 +93,12 @@ blobstore:
     secret_access_key: ${AWS_SECRET_KEY:?required}
 YAML
 fi
-
-bosh create-release
+create_release_args=()
+if [[ "${IGNORE_GIT_DIRTY_STATE:-X}" != "X" \
+    && -n "$(git status --porcelain)" ]]; then
+  create_release_args+=("--force")
+fi
+bosh create-release "${create_release_args[@]}"
 bosh upload-release --rebase
 
 header "Deploying to ${BOSH_ENVIRONMENT}..."
