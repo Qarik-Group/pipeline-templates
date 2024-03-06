@@ -60,8 +60,8 @@ meta:
     fail_moji:    ":airplane_arriving:"
     upset_moji:   ":sadpanda:"
     pipeline_url:  (( concat meta.url "/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}" ))
-    fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Concourse Failure! " meta.slack.upset_moji ">" ))
-    fail_text:    '(( concat meta.slack.fail_link " " meta.pipeline ": `${BUILD_JOB_NAME}` job failed" ))'
+    fail_link:     (( concat "<" meta.slack.pipeline_url "/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}| Let's go fix it!>" ))
+    fail_text:    '(( concat meta.pipeline ": `${BUILD_JOB_NAME}` job has failed " meta.slack.upset_moji " " meta.slack.fail_link " :hammer_and_wrench:" ))'
 
 groups:
   - name: (( grab meta.name ))
