@@ -27,6 +27,7 @@ jobs:
         repository: release-notes
     on_failure:
       put: notify
+      no_get: true
       params:
         topic:   (( concat meta.shout.topic "-$BUILD_JOB_NAME" ))
         message: release candidate job 'pre' failed (which is unusual).

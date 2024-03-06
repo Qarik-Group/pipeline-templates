@@ -123,6 +123,7 @@ jobs:
             MANIFEST_OP_PATHS:    (( grab meta.manifest.operator_file_paths ))
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -196,6 +197,7 @@ jobs:
             SUCCESS_MOJI: (( grab meta.slack.success_moji ))
     on_success:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -238,6 +240,7 @@ jobs:
         params: { file: version/number }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -252,6 +255,7 @@ jobs:
       - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -266,6 +270,7 @@ jobs:
       - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -280,6 +285,7 @@ jobs:
       - { put: version,                 params: { file: version/number } }
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -347,6 +353,7 @@ jobs:
           text_file: notifications/message
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -390,6 +397,7 @@ jobs:
           file: (( concat "compiled-release/compiled-releases/" meta.name "/*.tgz" ))
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
@@ -440,6 +448,7 @@ jobs:
           repository: pushme
     on_failure:
       put: notify
+      no_get: true
       params:
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))

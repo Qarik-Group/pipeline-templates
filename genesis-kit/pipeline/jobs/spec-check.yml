@@ -18,6 +18,7 @@ jobs:
         acl: public-read
     on_failure:
       put: notify
+      no_get: true
       params:
         topic:   (( concat meta.shout.topic "-$BUILD_JOB_NAME" ))
         message: tests job '$BUILD_JOB_NAME' failed.

@@ -22,6 +22,7 @@ jobs:
       params: {file: version/number}
     on_success:
       put: notify
+      no_get: true
       params:
         topic:   (( concat meta.shout.topic "-$BUILD_JOB_NAME" ))
         message: prerelease build for '$BUILD_JOB_NAME' succeeded.
@@ -29,6 +30,7 @@ jobs:
         link:    (( grab meta.shout.links.build ))
     on_failure:
       put: notify
+      no_get: true
       params:
         topic:   (( concat meta.shout.topic "-$BUILD_JOB_NAME" ))
         message: prerelease build for '$BUILD_JOB_NAME' failed.
