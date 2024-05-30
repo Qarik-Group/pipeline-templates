@@ -346,6 +346,7 @@ jobs:
         params:
           bump: patch
       - put: notify
+        no_get: true
         params:
           channel:  (( grab meta.slack.channel ))
           username: (( grab meta.slack.username ))
