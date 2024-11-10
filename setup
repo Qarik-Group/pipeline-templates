@@ -58,6 +58,7 @@ echo "Installing ${template} pipeline in ${target}..."
 mkdir -p ${target}/ci
 cp -R ${src}/${template}/* ${target}/ci/
 rm -rf ${target}/ci/helpers
+rm -f ${target}/ci/README.md
 cp ${src}/repipe ${target}/ci/
 [ -f ${target}/ci/settings.yml ] || initial_settings_yml ${template} ${target}
 exit 0

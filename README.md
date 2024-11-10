@@ -106,6 +106,9 @@ artifact, and also uploading that release tarball to S3.
 
 ![BOSH Release Pipeline][boshrelease-pipeline]
 
+See also the detailed [pipeline documentation](boshrelease/README.md) for more
+details.
+
 ### genesis-kit
 
 Builds a pipeline to create a pipeline that builds a release candidate, runs
