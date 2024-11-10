@@ -82,7 +82,26 @@ delete_deployment
 
 header "Creating candidate BOSH release..."
 if [[ -d dev_releases ]]; then
-  bosh -n reset-release # in case dev_releases/ is in repo accidentally
+  # in case dev_releases/ is in repo accidentally
+  if ! findmnt --mountpoint git/blobs > /dev/null; then
+    bosh -n reset-release
+  else
+    # When declaring the 'blobs/' directory as cached by Concourse, the
+    # 'blobs/' subdirectory is a mount point.
+    #
+    # First, we want the cache to be kept and not evicted, so we back it up.
+    mkdir -p ../cached-blobs
+    mv blobs/* ../cached-blobs/
+
+    # Then, 'bosh reset-release' might fail at deleting the mounted volume.
+    # This happens when re-running the 'testflight' script in a 'fly hijack'
+    # session. The command still still properly performs the necessary
+    # deletions, so just ignore its error status.
+    bosh -n reset-release || true
+
+    # Finally, we restore the contents of the cached directory.
+    mv ../cached-blobs/* blobs/
+  fi
 fi
 
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
