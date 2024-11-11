@@ -17,10 +17,11 @@ set -eu
 : ${BOSH_DEPLOYMENT:?"required"}
 : ${MANIFEST_PATH:?"required"}
 IGNORE_GIT_DIRTY_STATE=${IGNORE_GIT_DIRTY_STATE:-""}
-DEBUG=${DEBUG:-}
+DEBUG=${DEBUG:-""}
+SKIP_DEPLOYMENT_CLEANUP_ON_ERROR=${SKIP_DEPLOYMENT_CLEANUP_ON_ERROR:-""}
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-header() {
+function header() {
     echo
     echo "###############################################"
     echo
@@ -28,11 +29,27 @@ header() {
     echo
 }
 
-delete_deployment() {
+function destroy_deployment() {
     header "Cleaning up deployment..."
-    bosh -n delete-deployment --force
+    (
+        set -x
+        bosh -n delete-deployment --force
+    )
 }
-trap "echo; echo; echo; sleep 10; delete_deployment" EXIT SIGINT SIGTERM
+
+function cleanup_on_exit() {
+    local is_error=$?
+    echo; echo; echo
+    sleep 10
+    if [[ -n "${SKIP_DEPLOYMENT_CLEANUP_ON_ERROR}" && "${is_error}" -ne 0 ]]; then
+        echo "INFO: leaving deployment as-is" \
+            "(because SKIP_DEPLOYMENT_CLEANUP_ON_ERROR=${SKIP_DEPLOYMENT_CLEANUP_ON_ERROR})"
+    else
+        destroy_deployment
+    fi
+}
+
+trap "cleanup_on_exit" EXIT
 
 
 cd ${REPO_ROOT}
@@ -58,9 +75,9 @@ mkdir -p tmp
 # $MANIFEST_VARS can either be "key: value" or "key=value"
 # and will be converted to "key: value" YAML
 echo "${MANIFEST_VARS:-"{} ---"}" | sed -e "s/ *= */: /g" > tmp/vars.yml
-if [[ ! -z "${DEBUG}" ]]; then
+if [[ -n "${DEBUG}" ]]; then
     echo "Variables passed to deployment manifest:"
-    cat tmp/vars.yml
+    cat --number tmp/vars.yml
 fi
 # convert YAML to JSON to check YAML validity
 spruce json tmp/vars.yml > /dev/null
@@ -80,7 +97,7 @@ fi
 ${script_dir}/wait-until-proxy-bosh-cf-running
 if [[ "${PROXY_IP:-X}" != "X" ]] ; then export BOSH_ALL_PROXY=socks5://localhost:9999 ; fi
 
-delete_deployment
+destroy_deployment
 
 header "Creating candidate BOSH release..."
 if [[ -d dev_releases ]]; then
