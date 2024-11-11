@@ -23,7 +23,7 @@ RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${GIT_EMAIL:?"required"}
 : ${GIT_NAME:?"required"}
 
-if [[ -z ${VERSION_FROM} ]]; then
+if [[ -z "${VERSION_FROM}" ]]; then
     echo >&2 "VERSION_FROM environment variable not set, or empty. Did you misconfigure Concourse?"
     exit 2
 fi
@@ -32,7 +32,7 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     exit 2
 fi
 VERSION=$(cat ${VERSION_FROM})
-if [[ -z ${VERSION} ]]; then
+if [[  -z "${VERSION}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi

@@ -34,7 +34,7 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     exit 2
 fi
 version=$(cat ${VERSION_FROM})
-if [[ -z ${version} ]]; then
+if [[  -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
