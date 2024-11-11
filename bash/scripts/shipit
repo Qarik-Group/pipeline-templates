@@ -55,8 +55,6 @@ fi
 
 ###############################################################
 
-ROOT=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )
-
 pushd $REPO_ROOT
 
 mkdir artifacts

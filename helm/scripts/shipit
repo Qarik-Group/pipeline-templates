@@ -52,8 +52,6 @@ if [[ ! -f ${REPO_ROOT}/ci/release_notes.md ]]; then
     exit 1
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 ###############################################################
 
 git clone ${REPO_ROOT} ${REPO_OUT}

@@ -22,6 +22,7 @@ RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 : ${GITHUB_REPO:?"required"}
 : ${GIT_EMAIL:?"required"}
 : ${GIT_NAME:?"required"}
+TARGETS=${TARGETS:-"linux/amd64 darwin/amd64"}
 
 if [[ -z "${VERSION_FROM}" ]]; then
     echo >&2 "VERSION_FROM environment variable not set, or empty. Did you misconfigure Concourse?"
@@ -45,11 +46,8 @@ fi
 ###############################################################
 
 go version; echo; echo
-#?#ORIGIN=$(pwd)
-TARGETS=${TARGETS:-linux/amd64 darwin/amd64}
-ROOT=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )
 
-newgopath=${ROOT%%/gopath/*}/gopath
+newgopath=${REPO_ROOT%%/gopath/*}/gopath
 if [[ -d ${newgopath} ]]; then
     if [[ -z ${GOPATH} ]]; then
         GOPATH="${newgopath}"
