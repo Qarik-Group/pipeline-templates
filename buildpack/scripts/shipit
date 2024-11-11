@@ -24,8 +24,8 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
     exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[  -z "${VERSION}" ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
@@ -48,18 +48,18 @@ source .envrc
 
 rm -f *.zip
 buildpack-packager -summary
-buildpack-packager -version ${VERSION}
-buildpack-packager -version ${VERSION} -cached
+buildpack-packager -version ${version}
+buildpack-packager -version ${version} -cached
 cd -
 
 mkdir -p ${RELEASE_OUT}/artifacts
-echo "v${VERSION}"                    > ${RELEASE_OUT}/tag
-echo "${RELEASE_NAME} v${VERSION}"    > ${RELEASE_OUT}/name
+echo "v${version}"                    > ${RELEASE_OUT}/tag
+echo "${RELEASE_NAME} v${version}"    > ${RELEASE_OUT}/name
 mv ${REPO_OUT}/ci/release_notes.md      ${RELEASE_OUT}/notes.md
 mv ${REPO_OUT}/*.zip                    ${RELEASE_OUT}/artifacts
 
 cat > ${NOTIFICATION_OUT}/message <<EOF
-New ${RELEASE_NAME} v${VERSION} released. <${REPO_URL}/releases/tag/v${VERSION}|Release notes>.
+New ${RELEASE_NAME} v${version} released. <${REPO_URL}/releases/tag/v${version}|Release notes>.
 EOF
 
 # GIT!
@@ -72,9 +72,9 @@ fi
 
 (
     cd ${REPO_OUT}
-    echo "${VERSION}" > VERSION
+    echo "${version}" > VERSION
     git merge --no-edit ${RELEASE_BRANCH}
     git add -A
     git status
-    git commit -m "release v${VERSION}"
+    git commit -m "release v${version}"
 )

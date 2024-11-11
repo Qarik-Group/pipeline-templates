@@ -33,14 +33,14 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
     exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[  -z "${VERSION}" ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
 
-echo "v${VERSION}"                  > ${RELEASE_ROOT}/tag
-echo "${RELEASE_NAME} v${VERSION}"  > ${RELEASE_ROOT}/name
+echo "v${version}"                  > ${RELEASE_ROOT}/tag
+echo "${RELEASE_NAME} v${version}"  > ${RELEASE_ROOT}/name
 mv ${REPO_ROOT}/ci/release_notes.md   ${RELEASE_ROOT}/notes.md
 
 # GIT!
@@ -56,7 +56,7 @@ fi
     git merge --no-edit "${RELEASE_BRANCH}"
     git add -A
     git status
-    git commit -m "release v${VERSION} [skip ci]"
+    git commit -m "release v${version} [skip ci]"
 )
 
 # so that future steps in the pipeline can push our changes

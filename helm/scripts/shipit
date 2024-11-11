@@ -41,8 +41,8 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
     exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[  -z "${VERSION}" ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
@@ -61,12 +61,12 @@ git clone ${REPO_ROOT} ${REPO_OUT}
 pushd ${REPO_OUT}
 header "Bump version in Chart.yaml"
 tmpfile=$(mktemp /tmp/chart-yaml.XXXX)
-sed -e "s/^version:.*$/version: ${VERSION}/g" ${CHART_ROOT}/Chart.yaml > $tmpfile
+sed -e "s/^version:.*$/version: ${version}/g" ${CHART_ROOT}/Chart.yaml > $tmpfile
 cp $tmpfile ${CHART_ROOT}/Chart.yaml
 
 header "Bump docker image version in Values.yaml"
 tmpfile=$(mktemp /tmp/chart-yaml.XXXX)
-sed -e "s/^  tag:.*$/  tag: ${VERSION}/g" ${CHART_ROOT}/values.yaml > $tmpfile
+sed -e "s/^  tag:.*$/  tag: ${version}/g" ${CHART_ROOT}/values.yaml > $tmpfile
 cp $tmpfile ${CHART_ROOT}/values.yaml
 popd
 
@@ -99,17 +99,17 @@ if [[ -z $(git config --global user.name) ]]; then
     git config --global user.name "${GIT_NAME}"
 fi
 
-echo "v${VERSION}"                 > ${RELEASE_ROOT}/tag
-echo "v${VERSION}"                 > ${RELEASE_ROOT}/name
+echo "v${version}"                 > ${RELEASE_ROOT}/tag
+echo "v${version}"                 > ${RELEASE_ROOT}/name
 mv ${REPO_OUT}/ci/release_notes.md   ${RELEASE_ROOT}/notes.md
 
 pushd $REPO_OUT
     git merge --no-edit "${RELEASE_BRANCH}"
     git add -A
     git status
-    git commit -m "release v${VERSION}"
+    git commit -m "release v${version}"
 popd
 
 cat > ${NOTIFICATION_OUT:-notifications}/message <<EOS
-New ${CHART_NAME} v${VERSION} released. <https://github.com/${GITHUB_OWNER}/${CHART_NAME}/releases/tag/v${VERSION}|Release notes>.
+New ${CHART_NAME} v${version} released. <https://github.com/${GITHUB_OWNER}/${CHART_NAME}/releases/tag/v${version}|Release notes>.
 EOS

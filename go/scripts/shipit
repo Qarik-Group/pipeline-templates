@@ -31,8 +31,8 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
     exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[  -z "${VERSION}" ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
@@ -67,18 +67,18 @@ fi
 
 pushd $REPO_ROOT
 mkdir artifacts
-gox -osarch="${TARGETS}" --output="artifacts/${BINARY}-{{.OS}}-{{.Arch}}" -ldflags="-X main.Version=${VERSION}" ./...
-go build -o "${BINARY}" -ldflags="-X main.Version=${VERSION}" ${CMD_PKG:-.}
+gox -osarch="${TARGETS}" --output="artifacts/${BINARY}-{{.OS}}-{{.Arch}}" -ldflags="-X main.Version=${version}" ./...
+go build -o "${BINARY}" -ldflags="-X main.Version=${version}" ${CMD_PKG:-.}
 ./${BINARY} -v
 popd
 
-echo "v${VERSION}"                         > ${RELEASE_ROOT}/tag
-echo "${RELEASE_NAME} v${VERSION}"         > ${RELEASE_ROOT}/name
+echo "v${version}"                         > ${RELEASE_ROOT}/tag
+echo "${RELEASE_NAME} v${version}"         > ${RELEASE_ROOT}/name
 mv ${REPO_ROOT}/ci/release_notes.md          ${RELEASE_ROOT}/notes.md
 mv ${REPO_ROOT}/artifacts                    ${RELEASE_ROOT}/artifacts
 
 cat > ${RELEASE_ROOT}/notification <<EOF
-<!here> New ${RELEASE_NAME} v${VERSION} released!
+<!here> New ${RELEASE_NAME} v${version} released!
 EOF
 
 
@@ -95,12 +95,12 @@ fi
     git merge --no-edit "${RELEASE_BRANCH}"
     git add -A
     git status
-    git commit -m "release v${VERSION}"
+    git commit -m "release v${version}"
 )
 
 # so that future steps in the pipeline can push our changes
 cp -a ${REPO_ROOT} ${REPO_OUT}/git
 
 cat > ${NOTIFICATION_OUT:-notifications}/message <<EOS
-New ${RELEASE_NAME} v${VERSION} released. <https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tag/v${VERSION}|Release notes>.
+New ${RELEASE_NAME} v${version} released. <https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tag/v${version}|Release notes>.
 EOS

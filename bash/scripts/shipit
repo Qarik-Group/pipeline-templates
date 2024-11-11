@@ -42,8 +42,8 @@ if [[ ! -f ${VERSION_FROM} ]]; then
     echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
     exit 2
 fi
-VERSION=$(cat ${VERSION_FROM})
-if [[  -z "${VERSION}" ]]; then
+version=$(cat ${VERSION_FROM})
+if [[ -z "${version}" ]]; then
     echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
     exit 2
 fi
@@ -68,18 +68,18 @@ fi
 
 for bin in $(cd ${BIN_DIR} && ls ${BINARIES}); do
     cp ${BIN_DIR}/${bin} artifacts/${bin}
-    auto_sed artifacts/${bin} "s/^VERSION=.*/VERSION=\"v${VERSION}\"/"
-    artifacts/${bin} -v | grep ${VERSION}
+    auto_sed artifacts/${bin} "s/^VERSION=.*/VERSION=\"v${version}\"/"
+    artifacts/${bin} -v | grep ${version}
 done
 popd
 
-echo "v${VERSION}"                         > ${RELEASE_ROOT}/tag
-echo "${RELEASE_NAME} v${VERSION}"         > ${RELEASE_ROOT}/name
+echo "v${version}"                         > ${RELEASE_ROOT}/tag
+echo "${RELEASE_NAME} v${version}"         > ${RELEASE_ROOT}/name
 mv ${REPO_ROOT}/ci/release_notes.md          ${RELEASE_ROOT}/notes.md
 mv ${REPO_ROOT}/artifacts                    ${RELEASE_ROOT}/artifacts
 
 cat > ${RELEASE_ROOT}/notification <<EOF
-<!here> New ${RELEASE_NAME} v${VERSION} released!
+<!here> New ${RELEASE_NAME} v${version} released!
 EOF
 
 
@@ -98,7 +98,7 @@ fi
     git stash pop
     git add -A
     git status
-    git commit -m "release v${VERSION}"
+    git commit -m "release v${version}"
 )
 
 # so that future steps in the pipeline can push our changes
