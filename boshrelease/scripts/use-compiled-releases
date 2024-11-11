@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 set -eu
 
 : ${REPO_ROOT:?required}
@@ -11,16 +14,16 @@ set -eu
 git clone ${REPO_ROOT} ${REPO_OUT}
 
 pushd ${REPO_OUT}
-  if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
-    git lfs install
-  fi
+    if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
+        git lfs install
+    fi
 popd
 
 if [[ -z $(git config --global user.email) ]]; then
-  git config --global user.email "${GIT_EMAIL}"
+    git config --global user.email "${GIT_EMAIL}"
 fi
 if [[ -z $(git config --global user.name) ]]; then
-  git config --global user.name "${GIT_NAME}"
+    git config --global user.name "${GIT_NAME}"
 fi
 
 STEMCELL_OS=${STEMCELL_OS:-"ubuntu-jammy"}
@@ -30,20 +33,20 @@ releases=($(ls -d *compiled-release))
 
 for release in "${releases[@]}"; do
 
-  tar -xzf $release/*.tgz $( tar -tzf $release/*.tgz | grep 'release.MF' )
-  release_name=$( grep -E '^name: ' release.MF | awk '{print $2}' | tr -d "\"'" )
-  release_version=$( grep -E '^version: ' release.MF | awk '{print $2}' | tr -d "\"'" )
-  release_url=$(cat $release/url)
-  release_sha1=$(sha1sum $release/*.tgz | awk '{print $1}')
+    tar -xzf $release/*.tgz $( tar -tzf $release/*.tgz | grep 'release.MF' )
+    release_name=$( grep -E '^name: ' release.MF | awk '{print $2}' | tr -d "\"'" )
+    release_version=$( grep -E '^version: ' release.MF | awk '{print $2}' | tr -d "\"'" )
+    release_url=$(cat $release/url)
+    release_sha1=$(sha1sum $release/*.tgz | awk '{print $1}')
 
-  pushd ${REPO_OUT}
-    ci/scripts/update-manifest-compiled-release $release_name $release_version $release_url $release_sha1 $STEMCELL_OS $stemcell_version
-  popd
+    pushd ${REPO_OUT}
+        ci/scripts/update-manifest-compiled-release $release_name $release_version $release_url $release_sha1 $STEMCELL_OS $stemcell_version
+    popd
 done
 
 pushd ${REPO_OUT}
-  git merge --no-edit ${BRANCH}
-  git add -A
-  git status
-  git commit -m "Updated compiled releases for ${STEMCELL_OS}/${stemcell_version}"
+    git merge --no-edit ${BRANCH}
+    git add -A
+    git status
+    git commit -m "Updated compiled releases for ${STEMCELL_OS}/${stemcell_version}"
 popd

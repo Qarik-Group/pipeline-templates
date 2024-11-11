@@ -8,9 +8,10 @@
 # ci/settings.yml and override what needs overridden.
 # This uses spruce, so you have some options there.
 #
-# author:  James Hunt <james@niftylogic.com>
-#          Dennis Bell <dennis.j.bell@gmail.com>
-# created: 2016-03-04
+# original authors: James Hunt <james@niftylogic.com>
+#                   Dennis Bell <dennis.j.bell@gmail.com>
+# created:          2016-03-04
+# maintainer:       Benjamin Gandon (Gstack)
 
 meta:
   name:     (( param "Please name your pipeline" ))

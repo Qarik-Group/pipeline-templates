@@ -1,4 +1,7 @@
 ---
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 meta:
   name:     (( param "Please name your pipeline" ))
   team:     (( param "Please provide expected concourse team to deploy test pipelines" ))

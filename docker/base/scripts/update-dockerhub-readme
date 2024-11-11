@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# author:  Benjamin Gandon (Gstack)
+# created: 2021-12-13
+
 set -euo pipefail
 
 : ${DOCKERHUB_USERNAME:?"required"}
@@ -10,18 +13,20 @@ set -euo pipefail
 payload=$(jq --null-input \
     --arg "username" "${DOCKERHUB_USERNAME}" \
     --arg "password" "${DOCKERHUB_PASSWORD}" \
-    '{ "username": $username, "password": $password }')
+    '{ "username": $username, "password": $password }'
+)
 
 curl --silent --fail --show-error --location \
-    --request "POST" \
-    --url "https://hub.docker.com/v2/users/login" \
-    --header "Content-Type: application/json" \
-    --data-raw "${payload}" \
-  > ./token.json
+        --request "POST" \
+        --url "https://hub.docker.com/v2/users/login" \
+        --header "Content-Type: application/json" \
+        --data-raw "${payload}" \
+    > ./token.json
 
 payload=$(jq --null-input \
     --arg "full_description" "$(cat dockerhub/README.md)" \
-    '{ "full_description": $full_description }')
+    '{ "full_description": $full_description }'
+)
 
 curl --silent --fail --show-error --location --include \
     --request "PATCH" \

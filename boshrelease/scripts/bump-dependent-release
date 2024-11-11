@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 # The goal of this script is to retain the pretty nature of manifests, whilst updating
 # the "releases:" section.
 #
@@ -18,8 +21,8 @@ set -e
 : ${BRANCH:?required}
 
 if [[ ! -f ${RELEASE}/version ]]; then
-  echo "Director ${RELEASE} must have file /version"
-  exit 1
+    echo "Director ${RELEASE} must have file /version"
+    exit 1
 fi
 
 git clone ${REPO_ROOT} ${REPO_OUT}
@@ -42,8 +45,8 @@ version=$(cat ${RELEASE}/version)
 # we will just chomp out the original "releases:" section at the end of the file and
 # paste in the updated releases section.
 function bump_version {
-  manifest_path=$1
-  releases_updated=$(spruce merge <<YAML
+    manifest_path=$1
+    releases_updated=$(spruce merge <<YAML
 releases: $(spruce json "$manifest_path" | jq --arg name $NAME --arg version $version '.releases | map(
     if .name == $name
     then . + {"version":$version}
@@ -52,9 +55,9 @@ releases: $(spruce json "$manifest_path" | jq --arg name $NAME --arg version $ve
 )
 YAML
 )
-  releases_line_number=$(awk '/^releases:/{ print NR; exit }' $manifest_path)
-  manifest_head=$(head -n `expr $releases_line_number - 1` $manifest_path)
-  cat > $manifest_path <<YAML
+    releases_line_number=$(awk '/^releases:/{ print NR; exit }' $manifest_path)
+    manifest_head=$(head -n `expr $releases_line_number - 1` $manifest_path)
+    cat > $manifest_path <<YAML
 ${manifest_head}
 
 ${releases_updated}
@@ -64,11 +67,11 @@ YAML
 cd ${REPO_OUT}
 
 if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
-  git lfs install
+    git lfs install
 fi
 
 for manifest_path in $(ls manifests/*.yml); do
-  bump_version $manifest_path
+    bump_version $manifest_path
 done
 
 cat <<EOF >>ci/release_notes.md
@@ -77,10 +80,10 @@ EOF
 
 
 if [[ -z $(git config --global user.email) ]]; then
-  git config --global user.email "${GIT_EMAIL}"
+    git config --global user.email "${GIT_EMAIL}"
 fi
 if [[ -z $(git config --global user.name) ]]; then
-  git config --global user.name "${GIT_NAME}"
+    git config --global user.name "${GIT_NAME}"
 fi
 
 git merge --no-edit ${BRANCH}

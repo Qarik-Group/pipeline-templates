@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# original author: Geoff Franks (Stark & Wayne)
+# created:         2016-05-13
+# maintainer:      Benjamin Gandon (Gstack)
+
 set -e
 
 export GOPATH=${PWD}/gopath

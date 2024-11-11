@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 set -e
 
 : ${REPO_ROOT:?required}
@@ -17,28 +20,28 @@ set -e
 # git describe --tags `git rev-list --tags --max-count=1`
 # then convert v2.23.0 to VERSION=2.23.0
 [[ -f ${BLOB_DIR}/version ]] || {
-  # Perhaps move this into helper script that creates a github-release style folder
-  pushd ${BLOB_DIR}
-  tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-  popd
-  resource_dir=${BLOB_NAME}-${tag//v/}
-  git clone ${BLOB_DIR} ${resource_dir}
-  rm -rf ${resource_dir}/.git
-  echo ${tag}     > ${BLOB_DIR}/tag
-  echo ${tag//v/} > ${BLOB_DIR}/version
-  tar czf ${BLOB_DIR}/${BLOB_NAME}-${tag//v/}.tar.gz ${resource_dir}
+    # Perhaps move this into helper script that creates a github-release style folder
+    pushd ${BLOB_DIR}
+    tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+    popd
+    resource_dir=${BLOB_NAME}-${tag//v/}
+    git clone ${BLOB_DIR} ${resource_dir}
+    rm -rf ${resource_dir}/.git
+    echo ${tag}     > ${BLOB_DIR}/tag
+    echo ${tag//v/} > ${BLOB_DIR}/version
+    tar czf ${BLOB_DIR}/${BLOB_NAME}-${tag//v/}.tar.gz ${resource_dir}
 }
 version=$(cat ${BLOB_DIR}/version)
 
 pushd ${REPO_ROOT}
 
 if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
-  git lfs install
+    git lfs install
 fi
 
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
 if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
-  cat > config/private.yml <<YAML
+    cat > config/private.yml <<YAML
 ---
 blobstore:
   options:
@@ -49,7 +52,7 @@ fi
 
 blobs_to_remove=$(spruce json config/blobs.yml | jq -r "keys[] | select(test(\"${BLOB_CLEANUP}\"))")
 if [[ ! -z $blobs_to_remove ]]; then
-  echo "$blobs_to_remove" | xargs -L1 bosh remove-blob
+    echo "$blobs_to_remove" | xargs -L1 bosh remove-blob
 fi
 
 # expand ${version} env var into file path
@@ -60,25 +63,27 @@ rm config/private.yml
 popd
 
 if [[ -n "$(cd ${REPO_ROOT}; git status --porcelain)" ]]; then
-  pushd ${REPO_ROOT}
-  cat <<EOF >>ci/release_notes.md
+    pushd ${REPO_ROOT}
+    cat <<EOF >>ci/release_notes.md
 * Bumped ${BLOB_URL} to v${version}
 EOF
-  popd
+    popd
 
-  # GIT!
-  if [[ -z $(git config --global user.email) ]]; then
-    git config --global user.email "${GIT_EMAIL}"
-  fi
-  if [[ -z $(git config --global user.name) ]]; then
-    git config --global user.name "${GIT_NAME}"
-  fi
+    # GIT!
+    if [[ -z $(git config --global user.email) ]]; then
+        git config --global user.email "${GIT_EMAIL}"
+    fi
+    if [[ -z $(git config --global user.name) ]]; then
+        git config --global user.name "${GIT_NAME}"
+    fi
 
-  (cd ${REPO_ROOT}
-   git merge --no-edit ${BRANCH}
-   git add -A
-   git status
-   git commit -m "Bumped ${BLOB_NAME} to v${version}")
+    (
+        cd ${REPO_ROOT}
+        git merge --no-edit ${BRANCH}
+        git add -A
+        git status
+        git commit -m "Bumped ${BLOB_NAME} to v${version}"
+    )
 fi
 
 # so that future steps in the pipeline can push our changes

@@ -6,17 +6,18 @@
 # Script for finalizing and packaging Helm chart
 # and managing release notes
 #
-# author:  Dr Nic Williams <drnicwilliams@gmail.com>
-# created: 2018-11-09
+# original author: Dr Nic Williams <drnicwilliams@gmail.com>
+# created:         2018-11-09
+# maintainer:      Benjamin Gandon (Gstack)
 
 set -eu
 
 header() {
-	echo
-	echo "###############################################"
-	echo
-	echo $*
-	echo
+    echo
+    echo "###############################################"
+    echo
+    echo $*
+    echo
 }
 
 : ${CHART_NAME:?required}
@@ -37,18 +38,18 @@ RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
 HELM_VERSION=2.11.0
 
 if [[ ! -f ${VERSION_FROM} ]]; then
-  echo >&2 "Version file (${VERSION_FROM}) not found.  Did you misconfigure Concourse?"
-  exit 2
+    echo >&2 "Version file (${VERSION_FROM}) not found. Did you misconfigure Concourse?"
+    exit 2
 fi
 VERSION=$(cat ${VERSION_FROM})
 if [[ -z ${VERSION} ]]; then
-  echo >&2 "Version file (${VERSION_FROM}) was empty.  Did you misconfigure Concourse?"
-  exit 2
+    echo >&2 "Version file (${VERSION_FROM}) was empty. Did you misconfigure Concourse?"
+    exit 2
 fi
 
 if [[ ! -f ${REPO_ROOT}/ci/release_notes.md ]]; then
-  echo >&2 "ci/release_notes.md not found.  Did you forget to write them?"
-  exit 1
+    echo >&2 "ci/release_notes.md not found. Did you forget to write them?"
+    exit 1
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -72,7 +73,7 @@ popd
 header "Install helm"
 curl -LO https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VERSION}-linux-amd64.tar.gz
 tar xfz helm-*.tar.gz
-mv linux-amd64/helm  /usr/local/bin
+mv linux-amd64/helm /usr/local/bin
 helm version --client
 helm init --client-only
 
@@ -93,10 +94,10 @@ popd
 
 header "Update git repo with final release..."
 if [[ -z $(git config --global user.email) ]]; then
-  git config --global user.email "${GIT_EMAIL}"
+    git config --global user.email "${GIT_EMAIL}"
 fi
 if [[ -z $(git config --global user.name) ]]; then
-  git config --global user.name "${GIT_NAME}"
+    git config --global user.name "${GIT_NAME}"
 fi
 
 echo "v${VERSION}"                 > ${RELEASE_ROOT}/tag
@@ -104,10 +105,10 @@ echo "v${VERSION}"                 > ${RELEASE_ROOT}/name
 mv ${REPO_OUT}/ci/release_notes.md   ${RELEASE_ROOT}/notes.md
 
 pushd $REPO_OUT
-git merge --no-edit "${RELEASE_BRANCH}"
-git add -A
-git status
-git commit -m "release v${VERSION}"
+    git merge --no-edit "${RELEASE_BRANCH}"
+    git add -A
+    git status
+    git commit -m "release v${VERSION}"
 popd
 
 cat > ${NOTIFICATION_OUT:-notifications}/message <<EOS

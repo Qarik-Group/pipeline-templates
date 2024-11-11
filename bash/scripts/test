@@ -1,17 +1,21 @@
 #!/bin/bash
 
+# original author: Geoff Franks (Stark & Wayne)
+# created:         2016-11-18
+# maintainer:      Benjamin Gandon (Gstack)
+
 set -e
 
 cd ${REPO_ROOT}
 
 if [[ ! -d ${BIN_DIR} ]]; then
-	echo "${BIN_DIR} does not exist as a directory inside ${REPO_ROOT}"
-	exit 1
+    echo "${BIN_DIR} does not exist as a directory inside ${REPO_ROOT}"
+    exit 1
 fi
 
 for file in $(cd ${BIN_DIR} && ls ${BINARIES}); do
-	echo 'Verifying that `'${file}'` is a valid bash script'
-	${BIN_DIR}/$file -h >/dev/null 2>&1
+    echo 'Verifying that `'${file}'` is a valid bash script'
+    ${BIN_DIR}/$file -h >/dev/null 2>&1
 done
 
 exit 0

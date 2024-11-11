@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 set -eu
 
 : ${BOSH_ENVIRONMENT:?required}
@@ -16,19 +19,19 @@ STEMCELL_OS=${STEMCELL_OS:-"ubuntu-jammy"}
 STEMCELL_VERSION=$(cat stemcell/version)
 
 stemcells_count=$(
-  bosh stemcells --json \
-    | jq --raw-output \
-        --arg "cpi"     "${STEMCELL_CPI}" \
-        --arg "os"      "${STEMCELL_OS}" \
-        --arg "version" "${STEMCELL_VERSION}" \
-        '[ .Tables[0].Rows[]
-              | select(.os == $os
-                  and (.name | contains($cpi))
-                  and .version == $version)
-          ] | length'
+    bosh stemcells --json \
+        | jq --raw-output \
+            --arg "cpi"     "${STEMCELL_CPI}" \
+            --arg "os"      "${STEMCELL_OS}" \
+            --arg "version" "${STEMCELL_VERSION}" \
+            '[ .Tables[0].Rows[]
+                  | select(.os == $os
+                      and (.name | contains($cpi))
+                      and .version == $version)
+              ] | length'
 )
 if [[ ${stemcells_count} -gt 0 ]]; then
-  bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-${STEMCELL_CPI}-${STEMCELL_OS}-go_agent?v=${STEMCELL_VERSION}"
+    bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-${STEMCELL_CPI}-${STEMCELL_OS}-go_agent?v=${STEMCELL_VERSION}"
 fi
 
 #
@@ -68,8 +71,8 @@ EOF
 export BOSH_DEPLOYMENT="compilation-${release_name}"
 
 delete_compilation_deployment() {
-	echo "Cleaning up deployment..."
-	bosh -n delete-deployment --force
+    echo "Cleaning up deployment..."
+    bosh -n delete-deployment --force
 }
 trap "echo; echo; echo; sleep 10; delete_compilation_deployment" EXIT SIGINT SIGTERM
 

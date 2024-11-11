@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# original author: Dr Nic Williams (Stark & Wayne)
+# maintainer:      Benjamin Gandon (Gstack)
+
 # The goal of this script is to retain the pretty nature of manifests, whilst updating
 # the "releases:" section with a stemcell-restricted compiled release
 #
@@ -17,8 +20,8 @@ STEMCELL_OS=$5
 STEMCELL_VERSION=$6
 
 if [[ "${STEMCELL_VERSION:-X}" == "X" ]]; then
-  echo "USAGE: update-manifest-release NAME VERSION URL SHA1 STEMCELL_OS STEMCELL_VERSION"
-  exit 2
+    echo "USAGE: update-manifest-release NAME VERSION URL SHA1 STEMCELL_OS STEMCELL_VERSION"
+    exit 2
 fi
 : ${MANIFESTS_DIR:?required}
 
@@ -38,8 +41,8 @@ fi
 # we will just chomp out the original "releases:" section at the end of the file and
 # paste in the updated releases section.
 function bump_version {
-  manifest_path=$1
-  releases_updated=$(spruce merge <<YAML
+    manifest_path=$1
+    releases_updated=$(spruce merge <<YAML
 releases: $(spruce json "$manifest_path" | jq --arg name $NAME --arg version $VERSION --arg url $RELEASE_TGZ_URL --arg sha1 $RELEASE_TGZ_SHA1 --arg stemcell_os $STEMCELL_OS --arg stemcell_version $STEMCELL_VERSION '.releases | map(
     if .name == $name
     then . + {"version":$version,"url":$url,"sha1":$sha1,"stemcell":{"os":$stemcell_os,"version":$stemcell_version}}
@@ -47,10 +50,10 @@ releases: $(spruce json "$manifest_path" | jq --arg name $NAME --arg version $VE
     end)'
 )
 YAML
-)
-  releases_line_number=$(awk '/^releases:/{ print NR; exit }' $manifest_path)
-  manifest_head=$(head -n `expr $releases_line_number - 1` $manifest_path)
-  cat > $manifest_path <<YAML
+    )
+    releases_line_number=$(awk '/^releases:/{ print NR; exit }' $manifest_path)
+    manifest_head=$(head -n `expr $releases_line_number - 1` $manifest_path)
+    cat > $manifest_path <<YAML
 ${manifest_head}
 
 ${releases_updated}
@@ -58,8 +61,8 @@ YAML
 }
 
 for manifest_path in $(ls $MANIFESTS_DIR/*.yml); do
-  if [[ $manifest_path == *-vars.yml ]]; then
-    continue
-  fi
-  bump_version $manifest_path
+    if [[ $manifest_path == *-vars.yml ]]; then
+        continue
+    fi
+    bump_version $manifest_path
 done

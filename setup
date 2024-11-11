@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# original authors: James Hunt <james@niftylogic.com>
+#                   Dennis Bell <dennis.j.bell@gmail.com>
+# created:          2016-03-10
+# maintainer:       Benjamin Gandon (Gstack)
+
 src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pipeline_types="$(cd $src && find . -name 'pipeline.yml' | sed -e "s|^\./||;s|/pipeline.yml$||")"
 
 usage() {
-cat << EOF
+    cat <<EOF
 ${1:-"Setup pipeline template for the desired type of pipeline."}
 
 Usage: $0 <type> [/repo/to/setup]
@@ -13,14 +18,14 @@ where <type> is one of:
 $(echo "$pipeline_types" | sed -e "s/^/  - /")
 
 EOF
-  exit ${2:-0}
+    exit ${2:-0}
 }
 
 set -e
 case "${1}" in
-  (-h|--help|help)
-    usage
-    ;;
+    (-h|--help|help)
+        usage
+        ;;
 esac
 
 export template=$1
@@ -35,17 +40,17 @@ apply_shell_expansion() {
 }
 
 initial_settings_yml() {
-  local settings_yml=${target}/ci/settings.yml
-  if [[ -f ${src}/${template}/helpers/initial_settings.yml ]]; then
-    export team=${team:-main}
-    export name=$(basename $target)
-    export fly_target=${fly_target:-$(fly targets | head -n1 | tail -n1 | awk '{print $1}')}
-    export fly_target_url=$(bosh int ~/.flyrc --path /targets/${fly_target}/api)
-    apply_shell_expansion ${src}/${template}/helpers/initial_settings.yml > $settings_yml
-    ${src}/${template}/helpers/credhub-examples.sh
-  else
-    echo "--- {}" > $settings_yml
-  fi
+    local settings_yml=${target}/ci/settings.yml
+    if [[ -f ${src}/${template}/helpers/initial_settings.yml ]]; then
+        export team=${team:-main}
+        export name=$(basename $target)
+        export fly_target=${fly_target:-$(fly targets | head -n1 | tail -n1 | awk '{print $1}')}
+        export fly_target_url=$(bosh int ~/.flyrc --path /targets/${fly_target}/api)
+        apply_shell_expansion ${src}/${template}/helpers/initial_settings.yml > $settings_yml
+        ${src}/${template}/helpers/credhub-examples.sh
+    else
+        echo "--- {}" > $settings_yml
+    fi
 }
 
 [ -n "${template}" ] || usage "ERROR: Missing pipeline template type" 1

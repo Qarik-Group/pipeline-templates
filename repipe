@@ -5,20 +5,21 @@
 # Script for merging together pipeline configuration files
 # (via Spruce!) and configuring Concourse.
 #
-# author:  James Hunt <james@niftylogic.com>
-#          Dennis Bell <dennis.j.bell@gmail.com>
-# created: 2016-03-04
+# original authors: James Hunt <james@niftylogic.com>
+#                   Dennis Bell <dennis.j.bell@gmail.com>
+# created:          2016-03-04
+# maintainer:       Benjamin Gandon (Gstack)
 
 need_command() {
-	local cmd=${1:?need_command() - no command name given}
+    local cmd=${1:?need_command() - no command name given}
 
-	if [[ ! -x "$(command -v $cmd)" ]]; then
-		echo >&2 "${cmd} is not installed."
-		if [[ "${cmd}" == "spruce" ]]; then
-			echo >&2 "Please download it from https://github.com/geofffranks/spruce/releases"
-		fi
-		exit 2
-	fi
+    if [[ ! -x "$(command -v $cmd)" ]]; then
+        echo >&2 "${cmd} is not installed."
+        if [[ "${cmd}" == "spruce" ]]; then
+            echo >&2 "Please download it from https://github.com/geofffranks/spruce/releases"
+        fi
+        exit 2
+    fi
 }
 
 NO_FLY=
@@ -45,33 +46,35 @@ usage() {
 }
 
 open_pipeline() {
-	url=$(show_pipeline_url)
+    url=$(show_pipeline_url)
     cleanup
-	if [[ -x /usr/bin/open ]]; then
-		exec /usr/bin/open "$url"
-	else
-		echo "Sorry, but I was not able to automagically open"
-		echo "your Concourse Pipeline in the browser."
-		echo
-		echo "Here's a link you can click on, though:"
-		echo
-		echo "  $url"
-		echo
-		exit 0;
-	fi
+    if [[ -x /usr/bin/open ]]; then
+        exec /usr/bin/open "$url"
+    else
+        echo "Sorry, but I was not able to automagically open"
+        echo "your Concourse Pipeline in the browser."
+        echo
+        echo "Here's a link you can click on, though:"
+        echo
+        echo "  $url"
+        echo
+        exit 0;
+    fi
 }
 
 show_pipeline_url() {
-	spruce merge --skip-eval pipeline.yml ${settings_file} > .deploy.yml
-	concourse_url=$(spruce json .deploy.yml | jq -r ".meta.url")
-	team=$(spruce json .deploy.yml | jq -r ".meta.team // \"main\"")
-	pipeline=$(spruce merge --skip-eval \
-		--cherry-pick meta.pipeline \
-		--cherry-pick meta.name \
-		.deploy.yml | spruce merge - | spruce json | jq -r ".meta.pipeline")
-
-	echo "$concourse_url/teams/$team/pipelines/$pipeline"
-	exit 0
+    spruce merge --skip-eval pipeline.yml ${settings_file} > .deploy.yml
+    concourse_url=$(spruce json .deploy.yml | jq -r ".meta.url")
+    team=$(spruce json .deploy.yml | jq -r ".meta.team // \"main\"")
+    pipeline=$(
+        spruce merge --skip-eval \
+            --cherry-pick meta.pipeline \
+            --cherry-pick meta.name \
+            .deploy.yml \
+        | spruce merge - | spruce json | jq -r ".meta.pipeline"
+    )
+    echo "$concourse_url/teams/$team/pipelines/$pipeline"
+    exit 0
 }
 
 for arg do
@@ -98,8 +101,8 @@ need_command spruce
 settings_file="$(ls -1 settings.yml ${CONCOURSE_TARGET:+"settings-${CONCOURSE_TARGET}.yml"} 2>/dev/null | head -n1)"
 if [[ -z "$settings_file" ]]
 then
-  echo >&2 "Missing local settings in ci/settings.yml${CONCOURSE_TARGET:+" or ci/settings-${CONCOURSE_TARGET}.yml"}!"
-  exit 1
+    echo >&2 "Missing local settings in ci/settings.yml${CONCOURSE_TARGET:+" or ci/settings-${CONCOURSE_TARGET}.yml"}!"
+    exit 1
 fi
 
 echo >&2 "Using settings found in ${settings_file}"
@@ -113,26 +116,26 @@ trap "cleanup" QUIT TERM EXIT INT
 spruce merge pipeline.yml ${settings_file} > .deploy.yml
 PIPELINE=$(spruce json .deploy.yml | jq -r '.meta.pipeline // ""')
 if [[ -z ${PIPELINE} ]]; then
-	echo >&2 "Missing pipeline name in ci/settings.yml!"
-	exit 1
+    echo >&2 "Missing pipeline name in ci/settings.yml!"
+    exit 1
 fi
 
 TARGET_FROM_SETTINGS=$(spruce json .deploy.yml | jq -r '.meta.target // ""')
 if [[ -z ${CONCOURSE_TARGET} ]]; then
-  TARGET=${TARGET_FROM_SETTINGS}
+    TARGET=${TARGET_FROM_SETTINGS}
 elif [[ "$CONCOURSE_TARGET" != "$TARGET_FROM_SETTINGS" ]]
 then
-  echo >&2 "Target in {$settings_file} differs from target in \$CONCOURSE_TARGET"
-  echo >&2 "  \$CONCOURSE_TARGET: $CONCOURSE_TARGET"
-  echo >&2 "  Target in file:    $TARGET_FROM_SETTINGS"
-  exit 1
+    echo >&2 "Target in {$settings_file} differs from target in \$CONCOURSE_TARGET"
+    echo >&2 "  \$CONCOURSE_TARGET: $CONCOURSE_TARGET"
+    echo >&2 "  Target in file:    $TARGET_FROM_SETTINGS"
+    exit 1
 else
-  TARGET=${CONCOURSE_TARGET}
+    TARGET=${CONCOURSE_TARGET}
 fi
 
 if [[ -z ${TARGET} ]]; then
-	echo >&2 "Missing Concourse Target in ci/settings.yml!"
-	exit 1
+    echo >&2 "Missing Concourse Target in ci/settings.yml!"
+    exit 1
 fi
 
 fly_cmd="${FLY_CMD:-fly}"
