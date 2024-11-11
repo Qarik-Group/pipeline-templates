@@ -90,7 +90,6 @@ header "Uploading helm chart to ${HELM_S3_BUCKET_URI}"
 set -e
 helm s3 push ${RELEASE_ROOT}/artifacts/${CHART_NAME}*.tgz our-repo --force
 set +e
-popd
 
 header "Update git repo with final release..."
 if [[ -z $(git config --global user.email) ]]; then
