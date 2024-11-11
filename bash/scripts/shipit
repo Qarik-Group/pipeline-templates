@@ -18,9 +18,9 @@ auto_sed() {
     shift
 
     if [[ "$(uname -s)" == "Darwin" ]]; then
-        sed -E -i='' -e "$cmd" ${file}
+        sed -E -i='' -e "${cmd}" ${file}
     else
-        sed -r -i -e "$cmd" ${file}
+        sed -r -i -e "${cmd}" ${file}
     fi
 }
 
@@ -55,7 +55,7 @@ fi
 
 ###############################################################
 
-pushd $REPO_ROOT
+pushd ${REPO_ROOT}
 
 mkdir artifacts
 

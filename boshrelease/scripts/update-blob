@@ -51,8 +51,8 @@ YAML
 fi
 
 blobs_to_remove=$(spruce json config/blobs.yml | jq -r "keys[] | select(test(\"${BLOB_CLEANUP}\"))")
-if [[ ! -z $blobs_to_remove ]]; then
-    echo "$blobs_to_remove" | xargs -L1 bosh remove-blob
+if [[ ! -z ${blobs_to_remove} ]]; then
+    echo "${blobs_to_remove}" | xargs -L1 bosh remove-blob
 fi
 
 # expand ${version} env var into file path

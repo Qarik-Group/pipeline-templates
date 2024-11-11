@@ -59,13 +59,13 @@ git clone ${REPO_ROOT} ${REPO_OUT}
 pushd ${REPO_OUT}
 header "Bump version in Chart.yaml"
 tmpfile=$(mktemp /tmp/chart-yaml.XXXX)
-sed -e "s/^version:.*$/version: ${version}/g" ${CHART_ROOT}/Chart.yaml > $tmpfile
-cp $tmpfile ${CHART_ROOT}/Chart.yaml
+sed -e "s/^version:.*$/version: ${version}/g" ${CHART_ROOT}/Chart.yaml > ${tmpfile}
+cp ${tmpfile} ${CHART_ROOT}/Chart.yaml
 
 header "Bump docker image version in Values.yaml"
 tmpfile=$(mktemp /tmp/chart-yaml.XXXX)
-sed -e "s/^  tag:.*$/  tag: ${version}/g" ${CHART_ROOT}/values.yaml > $tmpfile
-cp $tmpfile ${CHART_ROOT}/values.yaml
+sed -e "s/^  tag:.*$/  tag: ${version}/g" ${CHART_ROOT}/values.yaml > ${tmpfile}
+cp ${tmpfile} ${CHART_ROOT}/values.yaml
 popd
 
 header "Install helm"
@@ -101,7 +101,7 @@ echo "v${version}"                 > ${RELEASE_ROOT}/tag
 echo "v${version}"                 > ${RELEASE_ROOT}/name
 mv ${REPO_OUT}/ci/release_notes.md   ${RELEASE_ROOT}/notes.md
 
-pushd $REPO_OUT
+pushd ${REPO_OUT}
     git merge --no-edit "${RELEASE_BRANCH}"
     git add -A
     git status

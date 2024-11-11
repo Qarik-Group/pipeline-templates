@@ -17,7 +17,7 @@ if [[ "${PROXY_IP:-X}" != "X" ]]; then
     : ${PROXY_USERNAME:?"required if PROXY_IP set"}
     : ${PROXY_PRIVATE_KEY:?"required if PROXY_IP set"}
     ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../.." && pwd )"
-    cd $ROOT
+    cd ${ROOT}
 
     mkdir -p proxy/ssh
     chmod 700 proxy/ssh
@@ -52,7 +52,7 @@ if [[ -f git/tmp/vars.yml ]]; then
     cf_api_url=$(bosh int git/tmp/vars.yml --path /cf-api-url)
     if [[ "${cf_api_url:-X}" != "X" ]]; then
         header "Checking Cloud Foundry available..."
-        until cf api $cf_api_url --skip-ssl-validation; do
+        until cf api ${cf_api_url} --skip-ssl-validation; do
             echo "Waiting until Cloud Foundry available..."
             sleep 60
         done

@@ -80,7 +80,7 @@ bosh -n create-release releases/${release_name}/${release_name}-${version}.yml \
 popd
 
 release_tgz=${REPO_OUT}/releases/${release_name}/${release_name}-${version}.tgz
-export release_sha1=$(sha1sum $release_tgz | head -n1 | awk '{print $1}')
+export release_sha1=$(sha1sum ${release_tgz} | head -n1 | awk '{print $1}')
 export release_url="https://github.com/${GITHUB_OWNER}/${release_name}-boshrelease/releases/download/v${version}/${release_name}-${version}.tgz"
 echo "RELEASE_SHA1=${release_sha1}"
 

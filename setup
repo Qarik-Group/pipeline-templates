@@ -6,19 +6,21 @@
 # maintainer:       Benjamin Gandon (Gstack)
 
 src="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-pipeline_types="$(cd $src && find . -name 'pipeline.yml' | sed -e "s|^\./||;s|/pipeline.yml$||")"
+pipeline_types="$(cd ${src} && find . -name 'pipeline.yml' | sed -e "s|^\./||;s|/pipeline.yml$||")"
 
 usage() {
+    local message=$1
+    local exit_status=$2
     cat <<EOF
-${1:-"Setup pipeline template for the desired type of pipeline."}
+${message:-"Setup pipeline template for the desired type of pipeline."}
 
-Usage: $0 <type> [/repo/to/setup]
+Usage: $(basename "${BASH_SOURCE[0]}") <type> [/repo/to/setup]
 
 where <type> is one of:
-$(echo "$pipeline_types" | sed -e "s/^/  - /")
+$(sed -e "s/^/  - /" <<< "${pipeline_types}")
 
 EOF
-    exit ${2:-0}
+    exit ${exit_status:-0}
 }
 
 set -e
@@ -33,31 +35,31 @@ export target=${2:-$(pwd)}
 
 apply_shell_expansion() {
     declare file="$1"
-    declare data=$(< "$file")
+    declare data=$(< "${file}")
     declare delimiter="__apply_shell_expansion_delimiter__"
-    declare command="cat <<$delimiter"$'\n'"$data"$'\n'"$delimiter"
-    eval "$command"
+    declare command="cat <<${delimiter}"$'\n'"${data}"$'\n'"${delimiter}"
+    eval "${command}"
 }
 
 initial_settings_yml() {
-    local settings_yml=${target}/ci/settings.yml
+    local settings_yml="${target}/ci/settings.yml"
     if [[ -f ${src}/${template}/helpers/initial_settings.yml ]]; then
-        export team=${team:-main}
-        export name=$(basename $target)
+        export team=${team:-"main"}
+        export name=$(basename "${target}")
         export fly_target=${fly_target:-$(fly targets | head -n1 | tail -n1 | awk '{print $1}')}
         export fly_target_url=$(bosh int ~/.flyrc --path /targets/${fly_target}/api)
-        apply_shell_expansion ${src}/${template}/helpers/initial_settings.yml > $settings_yml
+        apply_shell_expansion ${src}/${template}/helpers/initial_settings.yml > ${settings_yml}
         ${src}/${template}/helpers/credhub-examples.sh
     else
-        echo "--- {}" > $settings_yml
+        echo "--- {}" > ${settings_yml}
     fi
 }
 
 [ -n "${template}" ] || usage "ERROR: Missing pipeline template type" 1
 [ -d "${target}" ]   || usage "ERROR: ${target} path not found"       1
 
-pattern="^($(echo "$pipeline_types" | tr "\n" "|" | sed -e "s/\|*$//"))$"
-[[ "${template}"=~$pattern ]] || usage "ERROR: ${template} is not a valid pipeline template" 1
+pattern="^($(tr "\n" "|" <<<"${pipeline_types}" | sed -e "s/\|*$//"))$"
+[[ "${template}" =~ ${pattern} ]] || usage "ERROR: ${template} is not a valid pipeline template" 1
 
 echo "Installing ${template} pipeline in ${target}..."
 mkdir -p ${target}/ci

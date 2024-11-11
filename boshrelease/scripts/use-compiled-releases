@@ -33,14 +33,14 @@ releases=($(ls -d *compiled-release))
 
 for release in "${releases[@]}"; do
 
-    tar -xzf $release/*.tgz $( tar -tzf $release/*.tgz | grep 'release.MF' )
+    tar -xzf ${release}/*.tgz $( tar -tzf ${release}/*.tgz | grep 'release.MF' )
     release_name=$( grep -E '^name: ' release.MF | awk '{print $2}' | tr -d "\"'" )
     release_version=$( grep -E '^version: ' release.MF | awk '{print $2}' | tr -d "\"'" )
-    release_url=$(cat $release/url)
-    release_sha1=$(sha1sum $release/*.tgz | awk '{print $1}')
+    release_url=$(cat ${release}/url)
+    release_sha1=$(sha1sum ${release}/*.tgz | awk '{print $1}')
 
     pushd ${REPO_OUT}
-        ci/scripts/update-manifest-compiled-release $release_name $release_version $release_url $release_sha1 $STEMCELL_OS $stemcell_version
+        ci/scripts/update-manifest-compiled-release ${release_name} ${release_version} ${release_url} ${release_sha1} ${STEMCELL_OS} ${stemcell_version}
     popd
 done
 

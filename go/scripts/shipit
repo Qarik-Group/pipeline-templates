@@ -63,7 +63,7 @@ if [[ -n ${STATIC_BINARY} && ${STATIC_BINARY} != "false" ]]; then
     export CGO_ENABLED=0
 fi
 
-pushd $REPO_ROOT
+pushd ${REPO_ROOT}
 mkdir artifacts
 gox -osarch="${TARGETS}" --output="artifacts/${BINARY}-{{.OS}}-{{.Arch}}" -ldflags="-X main.Version=${version}" ./...
 go build -o "${BINARY}" -ldflags="-X main.Version=${version}" ${CMD_PKG:-.}

@@ -58,8 +58,8 @@ releases:
   version: "${release_version}"
 stemcells:
 - alias: default
-  os: "$STEMCELL_OS"
-  version: "$STEMCELL_VERSION"
+  os: "${STEMCELL_OS}"
+  version: "${STEMCELL_VERSION}"
 update:
   canaries: 1
   max_in_flight: 1
@@ -78,7 +78,7 @@ trap "echo; echo; echo; sleep 10; delete_compilation_deployment" EXIT SIGINT SIG
 
 
 bosh -n deploy manifest.yml
-bosh    export-release ${release_name}/${release_version} $STEMCELL_OS/$STEMCELL_VERSION
+bosh    export-release ${release_name}/${release_version} ${STEMCELL_OS}/${STEMCELL_VERSION}
 
 mkdir -p compiled-release/compiled-releases/${release_name}
 mv *.tgz compiled-release/compiled-releases/${release_name}/$( echo *.tgz | sed "s/\.tgz$/-$( date -u +%Y%m%d%H%M%S ).tgz/" )

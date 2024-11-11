@@ -47,17 +47,17 @@ version=$(cat ${RELEASE}/version)
 function bump_version {
     manifest_path=$1
     releases_updated=$(spruce merge <<YAML
-releases: $(spruce json "$manifest_path" | jq --arg name $NAME --arg version $version '.releases | map(
+releases: $(spruce json "${manifest_path}" | jq --arg name "${NAME}" --arg version "${version}" '.releases | map(
     if .name == $name
-    then . + {"version":$version}
+    then . + { "version": $version }
     else .
     end)'
 )
 YAML
 )
-    releases_line_number=$(awk '/^releases:/{ print NR; exit }' $manifest_path)
-    manifest_head=$(head -n `expr $releases_line_number - 1` $manifest_path)
-    cat > $manifest_path <<YAML
+    releases_line_number=$(awk '/^releases:/{ print NR; exit }' ${manifest_path})
+    manifest_head=$(head -n `expr ${releases_line_number} - 1` ${manifest_path})
+    cat > ${manifest_path} <<YAML
 ${manifest_head}
 
 ${releases_updated}
@@ -71,7 +71,7 @@ if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
 fi
 
 for manifest_path in $(ls manifests/*.yml); do
-    bump_version $manifest_path
+    bump_version ${manifest_path}
 done
 
 cat <<EOF >>ci/release_notes.md

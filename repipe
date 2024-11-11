@@ -13,7 +13,7 @@
 need_command() {
     local cmd=${1:?"need_command() - no command name given"}
 
-    if [[ ! -x "$(command -v $cmd)" ]]; then
+    if [[ ! -x "$(command -v ${cmd})" ]]; then
         echo >&2 "${cmd} is not installed."
         if [[ "${cmd}" == "spruce" ]]; then
             echo >&2 "Please download it from https://github.com/geofffranks/spruce/releases"
@@ -49,14 +49,14 @@ open_pipeline() {
     url=$(show_pipeline_url)
     cleanup
     if [[ -x /usr/bin/open ]]; then
-        exec /usr/bin/open "$url"
+        exec /usr/bin/open "${url}"
     else
         echo "Sorry, but I was not able to automagically open"
         echo "your Concourse Pipeline in the browser."
         echo
         echo "Here's a link you can click on, though:"
         echo
-        echo "  $url"
+        echo "  ${url}"
         echo
         exit 0;
     fi
@@ -73,7 +73,7 @@ show_pipeline_url() {
             .deploy.yml \
         | spruce merge - | spruce json | jq -r ".meta.pipeline"
     )
-    echo "$concourse_url/teams/$team/pipelines/$pipeline"
+    echo "${concourse_url}/teams/${team}/pipelines/${pipeline}"
     exit 0
 }
 
@@ -93,13 +93,13 @@ for arg do
     esac
 done
 
-cd $(dirname $BASH_SOURCE[0])
+cd "$(dirname "${BASH_SOURCE[0]}")"
 echo >&2 "Working in $(pwd)"
 need_command spruce
 
 # Allow for target-specific settings
 settings_file="$(ls -1 settings.yml ${CONCOURSE_TARGET:+"settings-${CONCOURSE_TARGET}.yml"} 2>/dev/null | head -n1)"
-if [[ -z "$settings_file" ]]
+if [[ -z "${settings_file}" ]]
 then
     echo >&2 "Missing local settings in ci/settings.yml${CONCOURSE_TARGET:+" or ci/settings-${CONCOURSE_TARGET}.yml"}!"
     exit 1
@@ -123,11 +123,11 @@ fi
 TARGET_FROM_SETTINGS=$(spruce json .deploy.yml | jq -r '.meta.target // ""')
 if [[ -z ${CONCOURSE_TARGET} ]]; then
     TARGET=${TARGET_FROM_SETTINGS}
-elif [[ "$CONCOURSE_TARGET" != "$TARGET_FROM_SETTINGS" ]]
+elif [[ "${CONCOURSE_TARGET}" != "${TARGET_FROM_SETTINGS}" ]]
 then
-    echo >&2 "Target in {$settings_file} differs from target in \$CONCOURSE_TARGET"
-    echo >&2 "  \$CONCOURSE_TARGET: $CONCOURSE_TARGET"
-    echo >&2 "  Target in file:    $TARGET_FROM_SETTINGS"
+    echo >&2 "Target in {${settings_file}} differs from target in \$CONCOURSE_TARGET"
+    echo >&2 "  \$CONCOURSE_TARGET: ${CONCOURSE_TARGET}"
+    echo >&2 "  Target in file:    ${TARGET_FROM_SETTINGS}"
     exit 1
 else
     TARGET=${CONCOURSE_TARGET}
@@ -149,6 +149,6 @@ case "${VALIDATE_PIPELINE}" in
 esac
 
 set +x
-$fly_cmd --target ${TARGET} ${fly_opts} --config .deploy.yml
+${fly_cmd} --target ${TARGET} ${fly_opts} --config .deploy.yml
 [[ -n ${VALIDATE_PIPELINE} ]] && exit 0
-$fly_cmd --target ${TARGET} unpause-pipeline --pipeline ${PIPELINE}
+${fly_cmd} --target ${TARGET} unpause-pipeline --pipeline ${PIPELINE}

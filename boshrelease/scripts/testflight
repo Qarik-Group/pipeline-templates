@@ -58,7 +58,7 @@ mkdir -p tmp
 # $MANIFEST_VARS can either be "key: value" or "key=value"
 # and will be converted to "key: value" YAML
 echo "${MANIFEST_VARS:-"{} ---"}" | sed -e "s/ *= */: /g" > tmp/vars.yml
-if [[ ! -z $DEBUG ]]; then
+if [[ ! -z "${DEBUG}" ]]; then
     echo "Variables passed to deployment manifest:"
     cat tmp/vars.yml
 fi
@@ -68,7 +68,7 @@ spruce json tmp/vars.yml > /dev/null
 echo "Confirming each operator file exists: ${MANIFEST_OP_PATHS:-ok, none specified.}"
 op_patch_file_errors=
 for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
-    if [[ ! -f $op_patch_file ]]; then
+    if [[ ! -f ${op_patch_file} ]]; then
         op_patch_file_errors=1
         echo "Operator file missing: ${op_patch_file}"
     fi
@@ -170,8 +170,8 @@ YAML
 YAML
 done
 
-instance_groups_with_persistent_disk_types=$(spruce json $MANIFEST_PATH | jq -r ".instance_groups[] | select(.persistent_disk_type).name")
-for ig_name in $instance_groups_with_persistent_disk_types; do
+instance_groups_with_persistent_disk_types=$(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[] | select(.persistent_disk_type).name")
+for ig_name in ${instance_groups_with_persistent_disk_types}; do
     cat >> tmp/deployment.yml <<YAML
 - type: replace
   path: /instance_groups/name=${ig_name}/persistent_disk_type
@@ -182,7 +182,7 @@ done
 
 op_patch_files_flags=""
 for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
-     op_patch_files_flags="${op_patch_files_flags} -o $op_patch_file"
+     op_patch_files_flags="${op_patch_files_flags} -o ${op_patch_file}"
 done
 
 set -x

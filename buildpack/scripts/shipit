@@ -37,11 +37,11 @@ fi
 
 ###############################################################
 
-git clone $REPO_ROOT $REPO_OUT
+git clone ${REPO_ROOT} ${REPO_OUT}
 
 go get github.com/cloudfoundry/libbuildpack/packager/buildpack-packager
 
-cd $REPO_OUT
+cd ${REPO_OUT}
 source .envrc
 
 rm -f *.zip
