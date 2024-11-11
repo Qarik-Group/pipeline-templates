@@ -28,6 +28,12 @@ meta:
 
 Otherwise, you may customize `meta.manifest.path` altogether.
 
+The `meta.manifest.path` and `meta.manifest.directory` variables are referring
+to filenames, so they , also known as
+[Bash globbing][bash_globbing].
+
+[bash_globbing]: https://www.gnu.org/software/bash/manual/bash.html#Filename-Expansion
+
 
 #### Applied operators
 
@@ -46,6 +52,9 @@ meta:
       deploy/operators/teak-stuff.yml
       deploy/operators/fix-things.yml
 ```
+
+The files listed in `meta.manifest.operator_file_paths` are subject to
+standard [Bash Filename Expansion][bash_globbing].
 
 
 #### Injected variable values
@@ -74,6 +83,8 @@ meta:
     some-prerequisite-setup
     smoke-tests
 ```
+
+Test errands are not filenames, so they don't support globbing.
 
 
 ### Implementation notes
