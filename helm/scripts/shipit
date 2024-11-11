@@ -20,20 +20,20 @@ header() {
     echo
 }
 
-: ${CHART_NAME:?required}
-: ${CHART_ROOT:?required}
-: ${REPO_ROOT:?required}
-: ${VERSION_FROM:?required}
-: ${RELEASE_ROOT:?required}
-: ${REPO_OUT:?required}
+: ${CHART_NAME:?"required"}
+: ${CHART_ROOT:?"required"}
+: ${REPO_ROOT:?"required"}
+: ${VERSION_FROM:?"required"}
+: ${RELEASE_ROOT:?"required"}
+: ${REPO_OUT:?"required"}
 RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
-: ${GITHUB_OWNER:?required}
-: ${GIT_EMAIL:?required}
-: ${GIT_NAME:?required}
-: ${NOTIFICATION_OUT:?required}
-: ${AWS_ACCESS_KEY_ID:?required}
-: ${AWS_SECRET_ACCESS_KEY:?required}
-: ${HELM_S3_BUCKET_URI:?required}
+: ${GITHUB_OWNER:?"required"}
+: ${GIT_EMAIL:?"required"}
+: ${GIT_NAME:?"required"}
+: ${NOTIFICATION_OUT:?"required"}
+: ${AWS_ACCESS_KEY_ID:?"required"}
+: ${AWS_SECRET_ACCESS_KEY:?"required"}
+: ${HELM_S3_BUCKET_URI:?"required"}
 
 HELM_VERSION=2.11.0
 

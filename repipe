@@ -11,7 +11,7 @@
 # maintainer:       Benjamin Gandon (Gstack)
 
 need_command() {
-    local cmd=${1:?need_command() - no command name given}
+    local cmd=${1:?"need_command() - no command name given"}
 
     if [[ ! -x "$(command -v $cmd)" ]]; then
         echo >&2 "${cmd} is not installed."

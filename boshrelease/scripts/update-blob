@@ -5,16 +5,16 @@
 
 set -e
 
-: ${REPO_ROOT:?required}
-: ${REPO_OUT:?required}
-: ${BLOB_DIR:?required}
-: ${BLOB_NAME:?required}
-: ${BLOB_BINARY:?required}
-: ${BLOB_CLEANUP:?required}
-: ${BLOB_DESTINATION:?required}
-: ${GIT_EMAIL:?required}
-: ${GIT_NAME:?required}
-: ${BRANCH:?required}
+: ${REPO_ROOT:?"required"}
+: ${REPO_OUT:?"required"}
+: ${BLOB_DIR:?"required"}
+: ${BLOB_NAME:?"required"}
+: ${BLOB_BINARY:?"required"}
+: ${BLOB_CLEANUP:?"required"}
+: ${BLOB_DESTINATION:?"required"}
+: ${GIT_EMAIL:?"required"}
+: ${GIT_NAME:?"required"}
+: ${BRANCH:?"required"}
 
 # if git-release, then look for tag
 # git describe --tags `git rev-list --tags --max-count=1`
@@ -40,13 +40,13 @@ if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
 fi
 
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
-if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
+if [[ ${blobstore_provider} == "s3" && -n "${AWS_ACCESS_KEY}" ]]; then
     cat > config/private.yml <<YAML
 ---
 blobstore:
   options:
     access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY:?required}
+    secret_access_key: ${AWS_SECRET_KEY:?"required if AWS_ACCESS_KEY set"}
 YAML
 fi
 

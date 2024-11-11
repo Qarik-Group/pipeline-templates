@@ -12,16 +12,16 @@
 
 set -eu
 
-: ${BINARY:?required}
-: ${REPO_ROOT:?required}
-: ${RELEASE_NAME:?required}
-: ${RELEASE_ROOT:?required}
-: ${REPO_OUT:?required}
+: ${BINARY:?"required"}
+: ${REPO_ROOT:?"required"}
+: ${RELEASE_NAME:?"required"}
+: ${RELEASE_ROOT:?"required"}
+: ${REPO_OUT:?"required"}
 RELEASE_BRANCH=${RELEASE_BRANCH:-"master"}
-: ${GITHUB_OWNER:?required}
-: ${GITHUB_REPO:?required}
-: ${GIT_EMAIL:?required}
-: ${GIT_NAME:?required}
+: ${GITHUB_OWNER:?"required"}
+: ${GITHUB_REPO:?"required"}
+: ${GIT_EMAIL:?"required"}
+: ${GIT_NAME:?"required"}
 
 if [[ -z ${VERSION_FROM} ]]; then
     echo >&2 "VERSION_FROM environment variable not set, or empty. Did you misconfigure Concourse?"

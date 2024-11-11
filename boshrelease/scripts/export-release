@@ -5,10 +5,10 @@
 
 set -eu
 
-: ${BOSH_ENVIRONMENT:?required}
-: ${BOSH_CA_CERT:?required}
-: ${BOSH_CLIENT:?required}
-: ${BOSH_CLIENT_SECRET:?required}
+: ${BOSH_ENVIRONMENT:?"required"}
+: ${BOSH_CA_CERT:?"required"}
+: ${BOSH_CLIENT:?"required"}
+: ${BOSH_CLIENT_SECRET:?"required"}
 
 #
 # stemcell metadata/upload

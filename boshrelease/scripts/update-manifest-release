@@ -20,7 +20,7 @@ if [[ "${RELEASE_TGZ_SHA1:-X}" == "X" ]]; then
     echo "USAGE: update-manifest-release NAME VERSION URL SHA1"
     exit 2
 fi
-: ${MANIFESTS_DIR:?required}
+: ${MANIFESTS_DIR:?"required"}
 
 # So, this is a nested bash/spruce/jq combo.
 # What is happening here is that the "releases:" section of each deployment manifest

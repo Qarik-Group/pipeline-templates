@@ -9,12 +9,13 @@
 
 set -eu
 
-: ${BOSH_ENVIRONMENT:?required}
-: ${BOSH_CA_CERT:?required}
-: ${BOSH_CLIENT:?required}
-: ${BOSH_CLIENT_SECRET:?required}
-: ${BOSH_DEPLOYMENT:?required}
-: ${MANIFEST_PATH:?required}
+: ${REPO_ROOT:?"required"}
+: ${BOSH_ENVIRONMENT:?"required"}
+: ${BOSH_CA_CERT:?"required"}
+: ${BOSH_CLIENT:?"required"}
+: ${BOSH_CLIENT_SECRET:?"required"}
+: ${BOSH_DEPLOYMENT:?"required"}
+: ${MANIFEST_PATH:?"required"}
 IGNORE_GIT_DIRTY_STATE=${IGNORE_GIT_DIRTY_STATE:-""}
 DEBUG=${DEBUG:-}
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -34,7 +35,7 @@ delete_deployment() {
 trap "echo; echo; echo; sleep 10; delete_deployment" EXIT SIGINT SIGTERM
 
 
-cd ${REPO_ROOT:?required}
+cd ${REPO_ROOT}
 
 if [[ -f ".gitattributes" ]] && grep -qF "lfs" ".gitattributes"; then
     git lfs install
@@ -106,13 +107,13 @@ if [[ -d dev_releases ]]; then
 fi
 
 blobstore_provider=$(bosh int config/final.yml --path /blobstore/provider)
-if [[ ${blobstore_provider} == "s3" && -n ${AWS_ACCESS_KEY} ]]; then
+if [[ ${blobstore_provider} == "s3" && -n "${AWS_ACCESS_KEY}" ]]; then
     cat > config/private.yml <<YAML
 ---
 blobstore:
   options:
     access_key_id: ${AWS_ACCESS_KEY}
-    secret_access_key: ${AWS_SECRET_KEY:?required}
+    secret_access_key: ${AWS_SECRET_KEY:?"required if AWS_ACCESS_KEY set"}
 YAML
 fi
 create_release_args=()
