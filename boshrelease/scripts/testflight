@@ -202,27 +202,31 @@ for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
      op_patch_files_flags="${op_patch_files_flags} -o ${op_patch_file}"
 done
 
-set -x
+(
+    set -x
+    bosh int ${MANIFEST_PATH} \
+            -o tmp/deployment.yml \
+            ${op_patch_files_flags} \
+            --vars-store tmp/creds.yml \
+            --vars-file tmp/vars.yml \
+            --var-errs \
+        > tmp/manifest.yml
 
-bosh int ${MANIFEST_PATH} \
-        -o tmp/deployment.yml \
-        ${op_patch_files_flags} \
-        --vars-store tmp/creds.yml \
-        --vars-file tmp/vars.yml \
-        --var-errs \
-    > tmp/manifest.yml
-
-bosh -n deploy tmp/manifest.yml
+    bosh -n deploy tmp/manifest.yml
+)
 
 TEST_ERRAND=${TEST_ERRAND:-""} # backwards compatibility
 TEST_ERRANDS=${TEST_ERRANDS:-"${TEST_ERRAND}"}
-if [[ -n "${TEST_ERRANDS}" ]]; then
+if [[ -z "${TEST_ERRANDS}" ]]; then
+    echo "No test errands specified, skipping."
+else
     for errand in ${TEST_ERRANDS}; do
         header "Running '${errand}' errand"
-        bosh -n run-errand ${errand}
+        (
+            set -x
+            bosh -n run-errand "${errand}"
+        )
     done
-else
-    echo "No test errands specified, skipping."
 fi
 
 echo
