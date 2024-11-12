@@ -29,6 +29,20 @@ function header() {
     echo
 }
 
+function pretty_print_bosh_cmd() {
+    echo -n "+"
+    local arg
+    for arg in "$@"; do
+        if [[ "${arg}" == --* ]]; then
+            echo -en "\\n    "
+        else
+            echo -n " "
+        fi
+        echo -n "${arg}"
+    done
+    echo
+}
+
 function destroy_deployment() {
     header "Cleaning up deployment..."
     (
@@ -82,12 +96,12 @@ fi
 # convert YAML to JSON to check YAML validity
 spruce json tmp/vars.yml > /dev/null
 
-echo "Confirming each operator file exists: ${MANIFEST_OP_PATHS:-ok, none specified.}"
+echo "Confirming each operator file exists: ${MANIFEST_OP_PATHS:-"ok, none specified."}"
 op_patch_file_errors=
 for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
     if [[ ! -f ${op_patch_file} ]]; then
         op_patch_file_errors=1
-        echo "Operator file missing: ${op_patch_file}"
+        echo "ERROR: missing operator file: '${op_patch_file}'"
     fi
 done
 if [[ ! -z ${op_patch_file_errors} ]]; then
@@ -103,7 +117,10 @@ header "Creating candidate BOSH release..."
 if [[ -d dev_releases ]]; then
     # in case dev_releases/ is in repo accidentally
     if ! findmnt --mountpoint git/blobs > /dev/null; then
-        bosh -n reset-release
+        (
+            set -x
+            bosh -n reset-release
+        )
     else
         # When declaring the 'blobs/' directory as cached by Concourse, the
         # 'blobs/' subdirectory is a mount point.
@@ -116,7 +133,10 @@ if [[ -d dev_releases ]]; then
         # This happens when re-running the 'testflight' script in a 'fly hijack'
         # session. The command still still properly performs the necessary
         # deletions, so just ignore its error status.
-        bosh -n reset-release || true
+        (
+            set +e -x
+            bosh -n reset-release
+        )
 
         # Finally, we restore the contents of the cached directory.
         mv ../cached-blobs/* blobs/
@@ -138,8 +158,11 @@ if [[ "${IGNORE_GIT_DIRTY_STATE:-X}" != "X" \
         && -n "$(git status --porcelain)" ]]; then
     create_release_args+=("--force")
 fi
-bosh create-release "${create_release_args[@]}"
-bosh upload-release --rebase
+(
+    set -x
+    bosh create-release "${create_release_args[@]}"
+    bosh upload-release --rebase
+)
 
 header "Deploying to ${BOSH_ENVIRONMENT}..."
 release_name=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
@@ -197,21 +220,24 @@ for ig_name in ${instance_groups_with_persistent_disk_types}; do
 YAML
 done
 
-op_patch_files_flags=""
+op_patch_files_args=()
 for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
-     op_patch_files_flags="${op_patch_files_flags} -o ${op_patch_file}"
+     op_patch_files_args+=(--ops-file "${op_patch_file}")
 done
 
+bosh_int_cmd=(
+    bosh interpolate ${MANIFEST_PATH} \
+        --ops-file tmp/deployment.yml \
+        "${op_patch_files_args[@]}" \
+        --vars-store tmp/creds.yml \
+        --vars-file tmp/vars.yml \
+        --var-errs
+)
+pretty_print_bosh_cmd >&2 "${bosh_int_cmd[@]}" "> tmp/manifest.yml"
+"${bosh_int_cmd[@]}" > tmp/manifest.yml
+echo
 (
     set -x
-    bosh int ${MANIFEST_PATH} \
-            -o tmp/deployment.yml \
-            ${op_patch_files_flags} \
-            --vars-store tmp/creds.yml \
-            --vars-file tmp/vars.yml \
-            --var-errs \
-        > tmp/manifest.yml
-
     bosh -n deploy tmp/manifest.yml
 )
 
