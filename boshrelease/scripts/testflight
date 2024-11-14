@@ -164,19 +164,28 @@ fi
     bosh upload-release --rebase
 )
 
-header "Deploying to ${BOSH_ENVIRONMENT}..."
-release_name=$(bosh int config/final.yml --path /final_name 2> /dev/null) \
-    || release_name=$(bosh int config/final.yml --path /name)
-
-header "Choosing cloud-config options"
+header "Generating deployment customizations..."
 vm_type=$(bosh int <(bosh cloud-config) --path /vm_types/0/name)
 disk_type=$(bosh int <(bosh cloud-config) --path /disk_types/0/name)
 network=$(bosh int <(bosh cloud-config) --path /networks/0/name)
 
-release_final_version=$(spruce json dev_releases/*/index.yml | jq -r ".builds[].version" | sed -e "s%+.*%%")
+release_name=$(bosh int config/final.yml --path /final_name 2>/dev/null) \
+    || release_name=$(bosh int config/final.yml --path /name)
+release_final_version=$(
+    spruce json dev_releases/*/index.yml | jq -r ".builds[].version" | sed -e "s%+.*%%"
+)
 release_dev_version="${release_final_version}.latest"
 
-cat > tmp/deployment.yml <<YAML
+echo "Enforced defaults:"
+echo " - deployment name:      ${BOSH_DEPLOYMENT}"
+echo " - main release name:    ${release_name}"
+echo " - main release version: ${release_dev_version}"
+echo " - for all instance groups:"
+echo "   - vm_type:              ${vm_type}"
+echo "   - persistent_disk_type: ${disk_type}"
+echo "   - network[0].name:      ${network}"
+
+cat > tmp/deployment-patches.yml <<YAML
 ---
 - type: replace
   path: /name
@@ -194,7 +203,7 @@ for ig_name in $(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[].name")
         bosh int "${MANIFEST_PATH}" --path "/instance_groups/name=${ig_name}/vm_resources"
     )
     if [[ -z "${vm_resources}" ]]; then
-        cat >> tmp/deployment.yml <<YAML
+        cat >> tmp/deployment-patches.yml <<YAML
 - type: replace
   path: /instance_groups/name=${ig_name}/vm_type
   value: ${vm_type}
@@ -202,7 +211,7 @@ for ig_name in $(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[].name")
 YAML
     fi
 
-    cat >> tmp/deployment.yml <<YAML
+    cat >> tmp/deployment-patches.yml <<YAML
 - type: replace
   path: /instance_groups/name=${ig_name}/networks
   value: [{name: ${network}}]
@@ -210,15 +219,20 @@ YAML
 YAML
 done
 
-instance_groups_with_persistent_disk_types=$(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[] | select(.persistent_disk_type).name")
+instance_groups_with_persistent_disk_types=$(
+    spruce json ${MANIFEST_PATH} \
+        | jq -r ".instance_groups[] | select(.persistent_disk_type).name"
+)
 for ig_name in ${instance_groups_with_persistent_disk_types}; do
-    cat >> tmp/deployment.yml <<YAML
+    cat >> tmp/deployment-patches.yml <<YAML
 - type: replace
   path: /instance_groups/name=${ig_name}/persistent_disk_type
   value: ${disk_type}
 
 YAML
 done
+
+header "Rendering deployment manifest..."
 
 op_patch_files_args=()
 for op_patch_file in ${MANIFEST_OP_PATHS//,/ } ; do
@@ -227,7 +241,7 @@ done
 
 bosh_int_cmd=(
     bosh interpolate ${MANIFEST_PATH} \
-        --ops-file tmp/deployment.yml \
+        --ops-file tmp/deployment-patches.yml \
         "${op_patch_files_args[@]}" \
         --vars-store tmp/creds.yml \
         --vars-file tmp/vars.yml \
@@ -235,12 +249,14 @@ bosh_int_cmd=(
 )
 pretty_print_bosh_cmd >&2 "${bosh_int_cmd[@]}" "> tmp/manifest.yml"
 "${bosh_int_cmd[@]}" > tmp/manifest.yml
-echo
+
+header "Deploying to ${BOSH_ENVIRONMENT}..."
 (
     set -x
     bosh -n deploy tmp/manifest.yml
 )
 
+header "Running test errands..."
 TEST_ERRAND=${TEST_ERRAND:-""} # backwards compatibility
 TEST_ERRANDS=${TEST_ERRANDS:-"${TEST_ERRAND}"}
 if [[ -z "${TEST_ERRANDS}" ]]; then
