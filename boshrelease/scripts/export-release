@@ -14,7 +14,7 @@ set -eu
 # stemcell metadata/upload
 #
 
-STEMCELL_CPI=${STEMCELL_CPI:-aws-xen-hvm}
+STEMCELL_CPI=${STEMCELL_CPI:-"aws-xen-hvm"}
 STEMCELL_OS=${STEMCELL_OS:-"ubuntu-jammy"}
 STEMCELL_VERSION=$(cat stemcell/version)
 
@@ -30,21 +30,29 @@ stemcells_count=$(
                       and .version == $version)
               ] | length'
 )
-if [[ ${stemcells_count} -eq 0 ]]; then
-    bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-${STEMCELL_CPI}-${STEMCELL_OS}-go_agent?v=${STEMCELL_VERSION}"
+if [[ "${stemcells_count}" -eq 0 ]]; then
+    echo "Uploading missing stemcell ${STEMCELL_CPI}-${STEMCELL_OS} version ${STEMCELL_VERSION}..."
+    (
+        set -x
+        bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-${STEMCELL_CPI}-${STEMCELL_OS}-go_agent?v=${STEMCELL_VERSION}"
+    )
 fi
 
 #
 # release metadata/upload
 #
 
-cd release
+pushd "release" >/dev/null
 tar -xzf *.tgz $( tar -tzf *.tgz | grep 'release.MF' )
 release_name=$(bosh int release.MF --path /name)
 release_version=$(bosh int release.MF --path /version)
 
-bosh -n upload-release *.tgz
-cd ../
+echo "Uploading release ${release_name} version ${release_version}..."
+(
+    set -x
+    bosh -n upload-release *.tgz
+)
+popd  >/dev/null
 
 #
 # compilation deployment
@@ -71,15 +79,30 @@ EOF
 export BOSH_DEPLOYMENT="compilation-${release_name}"
 
 delete_compilation_deployment() {
+    echo; echo; echo
     echo "Cleaning up deployment..."
-    bosh -n delete-deployment --force
+    sleep 10
+    (
+        set -x
+        bosh -n delete-deployment --force
+    )
 }
-trap "echo; echo; echo; sleep 10; delete_compilation_deployment" EXIT SIGINT SIGTERM
+trap "delete_compilation_deployment" EXIT
 
+echo "Compiling packages..."
+(
+    set -x
+    bosh -n deploy manifest.yml
+)
 
-bosh -n deploy manifest.yml
-bosh    export-release ${release_name}/${release_version} ${STEMCELL_OS}/${STEMCELL_VERSION}
+echo "Exporting compiled release..."
+(
+    set -x
+    bosh    export-release ${release_name}/${release_version} ${STEMCELL_OS}/${STEMCELL_VERSION}
+)
 
 mkdir -p compiled-release/compiled-releases/${release_name}
 mv *.tgz compiled-release/compiled-releases/${release_name}/$( echo *.tgz | sed "s/\.tgz$/-$( date -u +%Y%m%d%H%M%S ).tgz/" )
+
+echo "Computing SHA-1 checksum..."
 sha1sum  compiled-release/compiled-releases/${release_name}/*.tgz
