@@ -30,7 +30,7 @@ stemcells_count=$(
                       and .version == $version)
               ] | length'
 )
-if [[ ${stemcells_count} -gt 0 ]]; then
+if [[ ${stemcells_count} -eq 0 ]]; then
     bosh -n upload-stemcell "https://bosh.io/d/stemcells/bosh-${STEMCELL_CPI}-${STEMCELL_OS}-go_agent?v=${STEMCELL_VERSION}"
 fi
 
