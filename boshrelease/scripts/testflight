@@ -200,7 +200,9 @@ YAML
 
 for ig_name in $(spruce json ${MANIFEST_PATH} | jq -r ".instance_groups[].name"); do
     vm_resources=$(
-        bosh int "${MANIFEST_PATH}" --path "/instance_groups/name=${ig_name}/vm_resources"
+        bosh int "${MANIFEST_PATH}" \
+                --path "/instance_groups/name=${ig_name}/vm_resources" \
+            2>/dev/null || true
     )
     if [[ -z "${vm_resources}" ]]; then
         cat >> tmp/deployment-patches.yml <<YAML
