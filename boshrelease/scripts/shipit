@@ -120,7 +120,7 @@ ${script_dir}/update-manifest-release ${release_name} ${version} ${release_url} 
 git merge --no-edit "${RELEASE_BRANCH}"
 git add -A
 git status
-git commit -m "release v${version}"
+git commit -m "release v${version} [skip ci]"
 popd
 
 cat > ${NOTIFICATION_OUT:-notifications}/message <<EOS
