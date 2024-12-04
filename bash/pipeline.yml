@@ -96,6 +96,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -139,6 +140,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -154,6 +156,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -169,6 +172,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -184,6 +188,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -237,6 +242,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))

@@ -45,6 +45,7 @@ jobs:
       params:
         bump: patch
     - put: notify
+      no_get: true
       params:
         method: announce
         file: notifications/message

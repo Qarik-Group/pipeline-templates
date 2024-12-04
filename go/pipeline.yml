@@ -103,6 +103,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -169,6 +170,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -212,6 +214,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -227,6 +230,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -242,6 +246,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -257,6 +262,7 @@ jobs:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
@@ -314,17 +320,19 @@ jobs:
           tag:   gh/tag
           body:  gh/notes.md
           globs: [ gh/artifacts/* ]
-      - in_parallel:
-        - put: notify
-          params:
-            channel:  (( grab meta.slack.channel ))
-            username: (( grab meta.slack.username ))
-            icon_url: (( grab meta.slack.icon ))
-            text_file: notifications/message
+      - put: notify
+        no_get: true
+        params:
+          silent:   true
+          channel:  (( grab meta.slack.channel ))
+          username: (( grab meta.slack.username ))
+          icon_url: (( grab meta.slack.icon ))
+          text_file: notifications/message
     on_failure:
       put: notify
       no_get: true
       params:
+        silent:   true
         channel:  (( grab meta.slack.channel ))
         username: (( grab meta.slack.username ))
         icon_url: (( grab meta.slack.icon ))
